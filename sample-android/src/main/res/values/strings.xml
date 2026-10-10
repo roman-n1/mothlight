@@ -1,2 +1,3 @@
 <resources><string name="mock_request">Mock Retrofit request</string>    <string name="add_row_frame">Add row + frame</string>
+    <string name="diagnostic_scenario">Generate diagnostics</string>
 </resources>

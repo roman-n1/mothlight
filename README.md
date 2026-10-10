@@ -6,7 +6,8 @@
 
 An extensible, in-app developer panel for Kotlin Multiplatform and native Android.
 Inspect HTTP traffic, live database rows, SQL execution and realtime frames.
-Collect logs and diagnostics, and add tools owned by your app.
+Inspect startup milestones, lifecycle observations, navigation breadcrumbs and
+invariant counters. Collect logs and add tools owned by your app.
 
 > Early alpha. This repository contains the reusable foundation extracted from an
 > existing application. It does not include that application's authentication,
@@ -97,6 +98,14 @@ tracing, native Android and transport hooks.
 
 The [extraction inventory](docs/extraction-roadmap.md) tracks other tools from the
 original panel and distinguishes shipped capabilities from remaining work.
+
+## Typed diagnostics
+
+Startup, lifecycle, navigation and invariant tools are included in the default
+panel. Report milestones/transitions through `mothlight.startup`, `.lifecycle`,
+`.navigation` and `.invariants`. All are instance-owned and follow the recording
+gate. See the [diagnostic integration guide](docs/diagnostics.md) for host hooks,
+clock semantics, bounded retention, sample redaction and interpretation limits.
 
 ## Extend it
 

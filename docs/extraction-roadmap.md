@@ -12,10 +12,10 @@ to build Mothlight.
 | Room table browser and invalidations | Available; Room 2/3 adapters | Schema details, optional controlled read-only SQL console |
 | SQL execution feed and query statistics | Available; SQLiteDriver wrapper | Query plans; separately labelled subscription heuristic |
 | Socket frames and connection history | Available; host-instrumented passive hooks | Optional transport adapters, not app-specific channel enums |
-| Startup phases and navigation timing | Generic events can carry them | Typed spans, waterfall and timing summaries |
-| Lifecycle counters and component trees | Generic events can carry them | Owner-supplied tree snapshots, churn analysis |
-| Navigation breadcrumbs | Generic events can carry them | Typed bounded trail and filtering |
-| Invariant counters and alarms | Generic events can carry them | Severity, counters and detail view |
+| Startup phases and navigation timing | Typed startup milestones and interval waterfall available | Arbitrary timed spans and navigation timing |
+| Lifecycle counters and component trees | Typed counters and lifecycle history available | Owner-supplied tree snapshots, churn analysis |
+| Navigation breadcrumbs | Typed bounded trail with direction and filtering available | Optional framework adapters |
+| Invariant counters and alarms | Counts, peak/last severity, masked samples and screen context available | Host-owned alert policy |
 | Capability and subscription diagnostics | Custom tool/source API | Typed portable contracts |
 | DI graph, singleton identity diagnostics | Custom tool/source API | Graph source contract and viewer without global registry |
 | Network latency/error simulation | Not yet extracted | Explicit opt-in adapter and deterministic rule tests |

@@ -1,2 +1,3 @@
 <resources><string name="mock_request">Тестовый запрос Retrofit</string>    <string name="add_row_frame">Добавить строку + кадр</string>
+    <string name="diagnostic_scenario">Заполнить диагностику</string>
 </resources>

@@ -53,6 +53,10 @@ fun defaultMothlightTools(mothlight: Mothlight): MothlightTools = MothlightTools
     MothlightTool("http", { stringResource(Res.string.http) }) { NetworkContent(mothlight, it) },
     MothlightTool("sql", { stringResource(Res.string.sql) }) { SqlContent(mothlight, it) },
     MothlightTool("realtime", { stringResource(Res.string.realtime) }) { RealtimeContent(mothlight, it) },
+    MothlightTool("startup", { stringResource(Res.string.startup) }) { StartupContent(mothlight, it) },
+    MothlightTool("lifecycle", { stringResource(Res.string.lifecycle) }) { LifecycleContent(mothlight, it) },
+    MothlightTool("navigation", { stringResource(Res.string.navigation) }) { NavigationContent(mothlight, it) },
+    MothlightTool("invariants", { stringResource(Res.string.invariants) }) { InvariantsContent(mothlight, it) },
     MothlightTool("logs", { stringResource(Res.string.logs) }) { LogsContent(mothlight, it) },
     MothlightTool("events", { stringResource(Res.string.events) }) { EventsContent(mothlight, it) },
 ))

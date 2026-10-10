@@ -6,4 +6,5 @@
     <string name="mock_request">Тестовый HTTP-запрос</string>
     <string name="add_log">Добавить лог</string>
     <string name="add_row_frame">Добавить строку + кадр</string>
+    <string name="diagnostic_scenario">Заполнить диагностику</string>
 </resources>
