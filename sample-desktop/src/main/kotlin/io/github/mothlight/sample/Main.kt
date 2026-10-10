@@ -27,7 +27,7 @@ fun main() = application {
             val releaseLabel = stringResource(Res.string.release_object)
             DisposableEffect(demo) { onDispose { demo.close() } }
             val tools = remember(demo) {
-                MothlightTools(defaultMothlightTools(demo.mothlight).entries + databaseTool(demo.databaseSource) + retentionTool(demo.retentionWatcher) + MothlightTool(
+                MothlightTools(defaultMothlightTools(demo.mothlight).entries + databaseTool(demo.databaseSource) + retentionTool(demo.retentionWatcher, analyzer = demo.retentionAnalyzer) + MothlightTool(
                     id = "example-plugin",
                     title = { stringResource(Res.string.custom_tool) },
                     content = { modifier ->

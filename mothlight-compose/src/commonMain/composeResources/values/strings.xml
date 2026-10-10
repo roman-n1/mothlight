@@ -104,4 +104,20 @@
     <string name="retention_retained">Retained</string>
     <string name="retention_collected">Collected</string>
     <string name="retention_watching">Watching</string>
+    <string name="analysis_unavailable">Heap analysis is not configured on this platform. Object lifetime observation is still available.</string>
+    <string name="analysis_capture_hint">Analyze creates a temporary local heap dump that may contain app data and pause the app. The dump is deleted after analysis. Cancellation waits for capture to finish.</string>
+    <string name="analysis_start">Analyze retention paths</string>
+    <string name="analysis_cancel">Cancel analysis</string>
+    <string name="analysis_running">Capturing and analyzing memory…</string>
+    <string name="analysis_snapshot_hint">Snapshot results: a strong path explains retention at capture time, not whether the lifetime contract is correct. A missing path does not prove collection. Obfuscated names are shown as stored in the dump.</string>
+    <string name="analysis_finding">%1$s — %2$s</string>
+    <string name="analysis_root">GC root: %1$s</string>
+    <string name="analysis_signature">Path signature: %1$s</string>
+    <string name="analysis_strong_path">Strong retention path</string>
+    <string name="analysis_not_in_dump">No matching live target in dump</string>
+    <string name="analysis_no_path">Target found; no strong root path</string>
+    <string name="analysis_capture_failed">Could not capture memory. Check platform heap-dump support and private cache storage.</string>
+    <string name="analysis_too_large">The snapshot exceeds the analysis size limit and was deleted.</string>
+    <string name="analysis_failed">Could not analyze the snapshot or locate its watched-object schema.</string>
+    <string name="analysis_cleanup_failed">A temporary heap dump could not be removed. Clear the host app cache before sharing files.</string>
 </resources>

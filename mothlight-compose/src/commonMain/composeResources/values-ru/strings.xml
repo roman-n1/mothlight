@@ -104,4 +104,20 @@
     <string name="retention_retained">Удерживается</string>
     <string name="retention_collected">Освобождён</string>
     <string name="retention_watching">Наблюдение</string>
+    <string name="analysis_unavailable">Анализ снимка памяти не подключён на этой платформе. Наблюдение за временем жизни объектов остаётся доступным.</string>
+    <string name="analysis_capture_hint">Кнопка анализа создаёт временный локальный снимок памяти: он может содержать данные и приостановить приложение. После анализа снимок удаляется. Отмена ждёт завершения записи снимка.</string>
+    <string name="analysis_start">Найти цепочки удержания</string>
+    <string name="analysis_cancel">Отменить анализ</string>
+    <string name="analysis_running">Создание и анализ снимка памяти…</string>
+    <string name="analysis_snapshot_hint">Результат снимка: сильная цепочка объясняет удержание в момент записи, но не проверяет контракт времени жизни. Отсутствие цепочки не доказывает освобождение. Обфусцированные имена показаны как в снимке.</string>
+    <string name="analysis_finding">%1$s — %2$s</string>
+    <string name="analysis_root">Корень GC: %1$s</string>
+    <string name="analysis_signature">Сигнатура цепочки: %1$s</string>
+    <string name="analysis_strong_path">Сильная цепочка удержания</string>
+    <string name="analysis_not_in_dump">Живой объект не найден в снимке</string>
+    <string name="analysis_no_path">Объект найден; сильной цепочки от корня нет</string>
+    <string name="analysis_capture_failed">Не удалось создать снимок. Проверьте поддержку heap dump и приватный каталог кеша.</string>
+    <string name="analysis_too_large">Снимок превышает лимит размера для анализа и был удалён.</string>
+    <string name="analysis_failed">Не удалось разобрать снимок или найти схему наблюдаемых объектов.</string>
+    <string name="analysis_cleanup_failed">Не удалось удалить временный снимок памяти. Очистите кеш приложения перед передачей файлов.</string>
 </resources>
