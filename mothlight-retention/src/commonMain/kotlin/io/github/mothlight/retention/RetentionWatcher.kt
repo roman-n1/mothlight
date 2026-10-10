@@ -64,7 +64,7 @@ class RetentionWatcher(
     val snapshots: Flow<RetentionSnapshot> = state.map { it.publicSnapshot(support) }.distinctUntilChanged()
     private val worker = scope.launch(start = CoroutineStart.LAZY) {
         while (isActive) {
-            state.first { current -> current.mode == WatcherMode.RUNNING && current.tracked.any { it.handle != null } }
+            state.first { current -> current.mode == WatcherMode.RUNNING && current.tracked.any { it.entry.state != RetentionState.COLLECTED } }
             delay(intervalMillis)
             checkNow()
         }
@@ -86,8 +86,7 @@ class RetentionWatcher(
     }
 
     fun expectReleased(target: Any, label: String, reason: String): WatchResult {
-        var handle: WeakHandle? = null
-        var handleId: Long? = null
+        var registration: Registration = Registration.New
         val watchedAt = nowMillis()
         while (true) {
             val current = state.value
@@ -98,8 +97,9 @@ class RetentionWatcher(
                 WatcherMode.RUNNING -> Unit
             }
             // Create the weak handle before any deferred work. Neither CAS closure nor worker captures target.
-            val weak = if (handleId == current.nextId) checkNotNull(handle) else
-                backend.reference(target, WatchKey(sessionId, current.nextId)).also { handle = it; handleId = current.nextId }
+            val prepared = registration
+            val weak = if (prepared is Registration.Prepared && prepared.id == current.nextId) prepared.handle else
+                backend.reference(target, WatchKey(sessionId, current.nextId)).also { registration = Registration.Prepared(current.nextId, it) }
             val entry = RetentionEntry(current.nextId, label.take(256), reason.take(512), RetentionState.WATCHING, watchedAt, 0)
             val expanded = current.tracked + Tracked(entry, weak)
             val next = current.copy(
@@ -113,7 +113,7 @@ class RetentionWatcher(
 
     suspend fun checkNow(requestCollection: Boolean = false) = checks.withLock {
         val before = state.value
-        if (before.mode != WatcherMode.RUNNING || before.tracked.none { it.handle != null }) return@withLock
+        if (before.mode != WatcherMode.RUNNING || before.tracked.all { it.entry.state == RetentionState.COLLECTED }) return@withLock
         val changes = try {
             withContext(dispatcher) {
                 if (requestCollection) backend.requestCollection()
@@ -121,10 +121,10 @@ class RetentionWatcher(
                 before.tracked.associate { tracked ->
                     val entry = tracked.entry
                     val handle = tracked.handle
-                    val changed = if (handle == null) tracked else {
+                    val changed = if (entry.state == RetentionState.COLLECTED) tracked else {
                         val age = (now - entry.watchedAtMillis).coerceAtLeast(0)
                         when {
-                            !handle.isAlive() -> Tracked(entry.copy(state = RetentionState.COLLECTED, ageMillis = age), null)
+                            !handle.isAlive() -> Tracked(entry.copy(state = RetentionState.COLLECTED, ageMillis = age), CollectedHandle)
                             age >= graceMillis -> tracked.copy(entry = entry.copy(state = RetentionState.RETAINED, ageMillis = age))
                             else -> tracked.copy(entry = entry.copy(ageMillis = age))
                         }
@@ -173,7 +173,12 @@ private fun monotonicClock(): () -> Long {
     return { origin.elapsedNow().inWholeMilliseconds }
 }
 
-private data class Tracked(val entry: RetentionEntry, val handle: WeakHandle?)
+private data class Tracked(val entry: RetentionEntry, val handle: WeakHandle)
+private object CollectedHandle : WeakHandle { override fun isAlive() = false }
+private sealed interface Registration {
+    data object New : Registration
+    data class Prepared(val id: Long, val handle: WeakHandle) : Registration
+}
 private data class TrackingState(
     val mode: WatcherMode,
     val tracked: List<Tracked> = emptyList(),

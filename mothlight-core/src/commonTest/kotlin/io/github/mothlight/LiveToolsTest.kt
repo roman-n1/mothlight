@@ -16,7 +16,7 @@ class LiveToolsTest {
             override suspend fun tables() = listOf("items")
             override suspend fun page(table: String, limit: Int, offset: Int): DatabasePage {
                 reads++
-                return DatabasePage(table, listOf("name"), listOf(listOf(value)), 1, offset, limit)
+                return DatabasePage(table, listOf("name"), listOf(listOf(DatabaseCell.Text(value))), 1, offset, limit)
             }
             override fun changes() = flow {
                 observers++
@@ -26,12 +26,12 @@ class LiveToolsTest {
         val browser = DatabaseBrowser(source)
         val pages = mutableListOf<DatabasePage>()
         val job = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { browser.page("items", 10, 0).toList(pages) }
-        assertEquals("before", pages.single().rows.single().single())
+        assertEquals(DatabaseCell.Text("before"), pages.single().rows.single().single())
         assertEquals(1, observers)
         value = "after"
         changes.emit(Unit)
         runCurrent()
-        assertEquals(listOf("before", "after"), pages.map { it.rows.single().single() })
+        assertEquals(listOf(DatabaseCell.Text("before"), DatabaseCell.Text("after")), pages.map { it.rows.single().single() })
         job.cancelAndJoin()
         assertEquals(0, observers)
         changes.emit(Unit)
@@ -67,7 +67,7 @@ class LiveToolsTest {
         enabled = true
         inspector.connection("chat", ConnectionState.CONNECTED, 1)
         inspector.record("chat", FrameDirection.OUTGOING, """{"token":"secret","n":1}""", 2)
-        assertEquals("""{"token":"***","n":1}""", inspector.frames.value.single().payload)
+        assertEquals(CapturedBody.Text("""{"token":"***","n":1}"""), inspector.frames.value.single().payload)
         inspector.record("presence", FrameDirection.INCOMING, "{}", 3)
         inspector.record("chat", FrameDirection.INCOMING, "{}", 4)
         assertEquals(listOf("presence", "chat"), inspector.frames.value.map { it.channel })
@@ -79,6 +79,6 @@ class LiveToolsTest {
         assertTrue(inspector.frames.value.single().id > previous)
         val defaults = RealtimeInspector()
         defaults.record("test", FrameDirection.INCOMING, "secret", 0)
-        assertNull(defaults.frames.value.single().payload)
+        assertEquals(CapturedBody.NotCaptured, defaults.frames.value.single().payload)
     }
 }

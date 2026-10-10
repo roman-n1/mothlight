@@ -5,7 +5,7 @@ import kotlin.test.*
 
 class LiveToolMappersTest {
     @Test fun paginationHandlesLastPartialPageAndLocalizedNull() {
-        val page = DatabasePage("items", listOf("id", "name"), listOf(listOf("51", null)), 51, 50, 50)
+        val page = DatabasePage("items", listOf("id", "name"), listOf(listOf(DatabaseCell.Text("51"), DatabaseCell.SqlNull)), 51, 50, 50)
         assertFalse(hasNextPage(page))
         assertTrue(hasPreviousPage(page))
         assertEquals(0, previousOffset(page))
@@ -17,7 +17,7 @@ class LiveToolMappersTest {
         val state = SqlTraceSnapshot(queries = listOf(SqlQueryStat("SELECT cheap", 5, 0, 10, 2), SqlQueryStat("SELECT slow", 1, 0, 50, 50)))
         assertEquals(listOf("SELECT slow", "SELECT cheap"), sqlStats(state, "select").map { it.sql })
         assertEquals(1, sqlStats(state, "SLOW").size)
-        val frames = listOf(RealtimeFrame(1, "chat", FrameDirection.INCOMING, null, 1), RealtimeFrame(2, "presence", FrameDirection.INCOMING, null, 2), RealtimeFrame(3, "chat", FrameDirection.OUTGOING, null, 3))
+        val frames = listOf(RealtimeFrame(1, "chat", FrameDirection.INCOMING, CapturedBody.NotCaptured, 1), RealtimeFrame(2, "presence", FrameDirection.INCOMING, CapturedBody.NotCaptured, 2), RealtimeFrame(3, "chat", FrameDirection.OUTGOING, CapturedBody.NotCaptured, 3))
         assertEquals(listOf(3L, 1L), realtimeFrames(frames, "CHAT").map { it.id })
     }
 }

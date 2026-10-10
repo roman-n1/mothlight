@@ -23,14 +23,18 @@ class Redactor(
         val path = remainder.removePrefix(authority)
         return (prefix + authority.substringAfterLast('@') + path).take(bodyLimit)
     }
-    fun body(value: String?): String? {
-        if (!captureJsonBodies || value == null) return null
+    fun body(value: CapturedBody): CapturedBody = when {
+        !captureJsonBodies -> CapturedBody.NotCaptured
+        value is CapturedBody.Text -> body(value.value)
+        else -> value
+    }
+    fun body(value: String): CapturedBody {
+        if (!captureJsonBodies) return CapturedBody.NotCaptured
         // Do not parse or retain oversized/non-JSON content. Truncating before masking can expose secrets.
-        if (value.length > bodyLimit) return "[body omitted: size limit]"
-        val element = runCatching { Json.parseToJsonElement(value) }.getOrNull()
-            ?: return "[body omitted: not JSON]"
-        if (element !is JsonObject && element !is JsonArray) return "[body omitted: not JSON]"
-        return scrub(element).toString()
+        if (value.length > bodyLimit) return CapturedBody.TooLarge
+        val element = runCatching { Json.parseToJsonElement(value) }.getOrElse { return CapturedBody.NotJson }
+        if (element !is JsonObject && element !is JsonArray) return CapturedBody.NotJson
+        return CapturedBody.Text(scrub(element).toString())
     }
     private fun scrub(element: JsonElement): JsonElement = when (element) {
         is JsonObject -> JsonObject(element.mapValues { (key, value) ->

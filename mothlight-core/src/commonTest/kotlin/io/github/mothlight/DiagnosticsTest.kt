@@ -51,14 +51,14 @@ class DiagnosticsTest {
     }
     @Test fun invariantCountersKeepPeakSeverityAndMaskSamplesBeforePublication() {
         val recorder = InvariantRecorder(2, 2, Redactor(captureJsonBodies = true, additionalSensitiveKeys = setOf("account")))
-        recorder.record("order", InvariantSeverity.ERROR, 1, """{"token":"secret","account":"private","n":1}""", "Details")
+        recorder.record("order", InvariantSeverity.ERROR, 1, """{"token":"secret","account":"private","n":1}""", ScreenContext.Named("Details"))
         val sample = """{"token":"***","account":"***","n":1}"""
-        assertEquals(sample, recorder.snapshot.value.events.single().sample)
-        assertEquals(sample, recorder.snapshot.value.counters.single().lastSample)
-        recorder.record("order", InvariantSeverity.WARNING, 2, screen = "Home")
+        assertEquals(CapturedBody.Text(sample), recorder.snapshot.value.events.single().sample)
+        assertEquals(CapturedBody.Text(sample), recorder.snapshot.value.counters.single().lastSample)
+        recorder.record("order", InvariantSeverity.WARNING, 2, screen = ScreenContext.Named("Home"))
         recorder.record("cache", InvariantSeverity.INFO, 3)
         assertEquals(2, recorder.snapshot.value.events.size)
-        assertEquals(InvariantStat("order", 2, InvariantSeverity.ERROR, InvariantSeverity.WARNING, 2, null, "Home"), recorder.snapshot.value.counters.first())
+        assertEquals(InvariantStat("order", 2, InvariantSeverity.ERROR, InvariantSeverity.WARNING, 2, CapturedBody.NotCaptured, ScreenContext.Named("Home")), recorder.snapshot.value.counters.first())
         recorder.record("order", InvariantSeverity.INFO, 4)
         recorder.record("third", InvariantSeverity.INFO, 5)
         assertEquals(listOf("order", "third"), recorder.snapshot.value.counters.map { it.rule })
@@ -66,7 +66,7 @@ class DiagnosticsTest {
         assertEquals(InvariantSnapshot(), recorder.snapshot.value)
         val defaults = InvariantRecorder()
         defaults.record("test", InvariantSeverity.INFO, 1, """{"data":"private"}""")
-        assertNull(defaults.snapshot.value.events.single().sample)
+        assertEquals(CapturedBody.NotCaptured, defaults.snapshot.value.events.single().sample)
     }
     @Test fun allDiagnosticsFollowOwnerGateAndClearWithoutSharingState() {
         val first = Mothlight()
@@ -75,7 +75,7 @@ class DiagnosticsTest {
             m.startup.mark("ready", 1)
             m.lifecycle.record("Screen", LifecycleEvent.CREATED, 1)
             m.navigation.record("Home", NavigationDirection.PUSH, 1)
-            m.invariants.record("rule", InvariantSeverity.WARNING, 1, screen = "Explicit")
+            m.invariants.record("rule", InvariantSeverity.WARNING, 1, screen = ScreenContext.Named("Explicit"))
         }
         record(first)
         assertTrue(first.startup.spans.value.isEmpty())
@@ -96,9 +96,9 @@ class DiagnosticsTest {
         assertEquals(LifecycleSnapshot(), first.lifecycle.snapshot.value)
         assertTrue(first.navigation.entries.value.isEmpty())
         assertEquals(InvariantSnapshot(), first.invariants.snapshot.value)
-        assertEquals("Explicit", second.invariants.snapshot.value.counters.single().lastScreen)
+        assertEquals(ScreenContext.Named("Explicit"), second.invariants.snapshot.value.counters.single().lastScreen)
         second.navigation.record("Different", NavigationDirection.PUSH, 2)
-        assertEquals("Explicit", second.invariants.snapshot.value.counters.single().lastScreen)
+        assertEquals(ScreenContext.Named("Explicit"), second.invariants.snapshot.value.counters.single().lastScreen)
     }
     @Test fun invalidBoundsFailAtConstruction() {
         assertFailsWith<IllegalArgumentException> { StartupTrace(0) }

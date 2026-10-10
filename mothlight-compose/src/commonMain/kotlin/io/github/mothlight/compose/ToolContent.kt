@@ -20,7 +20,7 @@ import org.jetbrains.compose.resources.stringResource
 internal fun NetworkContent(mothlight: Mothlight, modifier: Modifier) {
     val transactions by mothlight.network.transactions.collectAsState()
     var query by remember { mutableStateOf("") }
-    var selectedId by remember { mutableStateOf<String?>(null) }
+    var selectedId by remember { mutableStateOf<NetworkSelection>(NetworkSelection.Unselected) }
     val rows = remember(transactions, query) { networkRows(transactions, query) }
     val selected = remember(transactions, selectedId) { selectedTransaction(transactions, selectedId) }
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -31,21 +31,22 @@ internal fun NetworkContent(mothlight: Mothlight, modifier: Modifier) {
                 ListItem(
                     headlineContent = { Text(row.title, maxLines = 2) },
                     supportingContent = { Text(row.subtitle + " · " + stringResource(Res.string.duration_ms, row.duration), fontFamily = FontFamily.Monospace) },
-                    modifier = Modifier.clickable { selectedId = row.id },
+                    modifier = Modifier.clickable { selectedId = NetworkSelection.Request(row.id) },
                 )
                 HorizontalDivider()
             }
         }
         when (selected) {
-            null -> Text(stringResource(Res.string.select_request), style = MaterialTheme.typography.bodySmall)
-            else -> SelectionContainer(Modifier.fillMaxWidth().weight(1f)) {
+            RequestDetails.Prompt -> Text(stringResource(Res.string.select_request), style = MaterialTheme.typography.bodySmall)
+            is RequestDetails.Ready -> SelectionContainer(Modifier.fillMaxWidth().weight(1f)) {
+                val transaction = selected.transaction
                 Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(Res.string.request), style = MaterialTheme.typography.titleMedium)
-                    Text(requestDetails(selected, localizedBody(selected.requestBody)), fontFamily = FontFamily.Monospace)
+                    Text(requestDetails(transaction, localizedBody(transaction.requestBody)), fontFamily = FontFamily.Monospace)
                     Text(stringResource(Res.string.response), style = MaterialTheme.typography.titleMedium)
-                    Text(responseDetails(selected, localizedBody(selected.responseBody)), fontFamily = FontFamily.Monospace)
+                    Text(responseDetails(transaction, localizedBody(transaction.responseBody)), fontFamily = FontFamily.Monospace)
                     Text(stringResource(Res.string.curl), style = MaterialTheme.typography.titleMedium)
-                    Text(buildCurlCommand(selected), fontFamily = FontFamily.Monospace)
+                    Text(buildCurlCommand(transaction), fontFamily = FontFamily.Monospace)
                 }
             }
         }
@@ -80,9 +81,9 @@ private fun FeedContent(rows: List<FeedRow>, modifier: Modifier) {
 }
 
 @Composable
-internal fun localizedBody(body: String?): String = when (body) {
-    null -> stringResource(Res.string.body_not_captured)
-    "[body omitted: size limit]" -> stringResource(Res.string.body_too_large)
-    "[body omitted: not JSON]" -> stringResource(Res.string.body_not_json)
-    else -> body
+internal fun localizedBody(body: CapturedBody): String = when (body) {
+    CapturedBody.NotCaptured -> stringResource(Res.string.body_not_captured)
+    CapturedBody.TooLarge -> stringResource(Res.string.body_too_large)
+    CapturedBody.NotJson -> stringResource(Res.string.body_not_json)
+    is CapturedBody.Text -> body.value
 }

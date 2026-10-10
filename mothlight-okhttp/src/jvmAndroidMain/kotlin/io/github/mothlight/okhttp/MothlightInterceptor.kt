@@ -1,6 +1,7 @@
 package io.github.mothlight.okhttp
 
 import io.github.mothlight.NetworkInspector
+import io.github.mothlight.CapturedBody
 import okhttp3.Interceptor
 import okhttp3.Response
 import java.io.IOException
@@ -17,7 +18,7 @@ class MothlightInterceptor(private val inspector: NetworkInspector) : Intercepto
             method = request.method,
             url = request.url.toString(),
             headers = request.headers.names().associateWith { request.headers.values(it).joinToString(", ") },
-            body = null,
+            body = CapturedBody.NotCaptured,
             now = System.currentTimeMillis(),
         )
         try {
@@ -37,16 +38,16 @@ class MothlightInterceptor(private val inspector: NetworkInspector) : Intercepto
         }
     }
 
-    private fun capturedBody(response: Response): String? {
-        if (!inspector.redactor.captureJsonBodies) return null
-        val subtype = response.body?.contentType()?.subtype ?: return null
-        if (subtype != "json" && !subtype.endsWith("+json")) return null
+    private fun capturedBody(response: Response): CapturedBody {
+        if (!inspector.redactor.captureJsonBodies) return CapturedBody.NotCaptured
+        val subtype = response.body?.contentType()?.subtype ?: return CapturedBody.NotCaptured
+        if (subtype != "json" && !subtype.endsWith("+json")) return CapturedBody.NotCaptured
         return try {
             // Extra byte lets the redactor distinguish an oversized ASCII body from a complete one.
-            response.peekBody(inspector.redactor.bodyLimit.toLong() + 1).use { it.string() }
+            response.peekBody(inspector.redactor.bodyLimit.toLong() + 1).use { CapturedBody.Text(it.string()) }
         } catch (_: IOException) {
             // Diagnostics must not replace a response with an observation failure.
-            null
+            CapturedBody.NotCaptured
         }
     }
 }

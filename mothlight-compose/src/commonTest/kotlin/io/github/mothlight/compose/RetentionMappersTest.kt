@@ -25,8 +25,8 @@ class RetentionMappersTest {
         val state = MothlightPanelState()
         val other = MothlightPanelState()
         state.selectTool("retention")
-        assertEquals("retention", state.selectedTool.value)
-        assertNull(other.selectedTool.value)
+        assertEquals(ToolSelection.Named("retention"), state.selectedTool.value)
+        assertEquals(ToolSelection.Default, other.selectedTool.value)
         assertEquals("retention", resolveToolId(listOf("http", "retention"), state.selectedTool.value))
         assertEquals("http", resolveToolId(listOf("http"), state.selectedTool.value))
         assertFailsWith<IllegalArgumentException> { state.selectTool(" ") }

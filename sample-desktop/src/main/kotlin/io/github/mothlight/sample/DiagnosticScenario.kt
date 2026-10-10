@@ -14,8 +14,8 @@ fun diagnosticScenario(mothlight: Mothlight) {
     mothlight.navigation.record("Home", NavigationDirection.RESET, 100)
     mothlight.navigation.record("Details", NavigationDirection.PUSH, 200)
     mothlight.invariants.record("demo.sorted", InvariantSeverity.ERROR, 250,
-        sampleJson = """{"index":3,"token":"demo-secret"}""", screen = "Details")
+        sampleJson = """{"index":3,"token":"demo-secret"}""", screen = ScreenContext.Named("Details"))
     mothlight.navigation.record("Home", NavigationDirection.POP, 300)
     mothlight.invariants.record("demo.sorted", InvariantSeverity.WARNING, 350,
-        sampleJson = """{"index":1,"token":"demo-secret"}""", screen = "Home")
+        sampleJson = """{"index":1,"token":"demo-secret"}""", screen = ScreenContext.Named("Home"))
 }

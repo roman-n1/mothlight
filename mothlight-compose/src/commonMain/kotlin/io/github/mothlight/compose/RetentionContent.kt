@@ -16,12 +16,12 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
 /** Optional tool: the host owns the watcher's scope and reports lifetime boundaries. */
-fun retentionTool(watcher: RetentionWatcher, id: String = "retention", analyzer: RetentionAnalyzer? = null) = MothlightTool(
+fun retentionTool(watcher: RetentionWatcher, id: String = "retention", analyzer: RetentionAnalyzer = UnsupportedRetentionAnalyzer) = MothlightTool(
     id, { stringResource(Res.string.retention_title) }, { RetentionContent(watcher, it, analyzer) },
 )
 
 @Composable
-private fun RetentionContent(watcher: RetentionWatcher, modifier: Modifier, analyzer: RetentionAnalyzer? = null) {
+private fun RetentionContent(watcher: RetentionWatcher, modifier: Modifier, analyzer: RetentionAnalyzer = UnsupportedRetentionAnalyzer) {
     val snapshot by watcher.snapshots.collectAsState(watcher.snapshot)
     val scope = rememberCoroutineScope()
     var query by remember { mutableStateOf("") }
@@ -71,15 +71,17 @@ private fun RetentionContent(watcher: RetentionWatcher, modifier: Modifier, anal
 }
 
 @Composable
-internal fun RetentionBadge(watcher: RetentionWatcher, onOpen: (() -> Unit)?) {
+internal fun RetentionBadge(watcher: RetentionWatcher, action: RetentionAction) {
     val snapshot by watcher.snapshots.collectAsState(watcher.snapshot)
     val label = when (snapshot.mode) {
         WatcherMode.RUNNING -> stringResource(Res.string.retention_count, snapshot.retainedCount)
         else -> stringResource(modeLabel(snapshot.mode))
     }
     Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.secondaryContainer) {
-        if (onOpen == null) Text(label, Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
-        else TextButton(onClick = onOpen) { Text(label) }
+        when (action) {
+            RetentionAction.ReadOnly -> Text(label, Modifier.padding(8.dp), style = MaterialTheme.typography.labelSmall)
+            is RetentionAction.OpenTool -> TextButton(onClick = action.execute) { Text(label) }
+        }
     }
 }
 

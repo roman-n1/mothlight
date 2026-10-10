@@ -26,9 +26,8 @@ fun createMemoryOverlayView(
     context: Context,
     mothlight: Mothlight,
     source: io.github.mothlight.memory.MemorySource = io.github.mothlight.memory.PlatformMemorySource,
-    retentionWatcher: io.github.mothlight.retention.RetentionWatcher? = null,
-    onOpenRetention: (() -> Unit)? = null,
+    retention: RetentionOverlay = RetentionOverlay.Hidden,
 ): ComposeView = ComposeView(context).apply {
     setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindowOrReleasedFromPool)
-    setContent { MaterialTheme { MemoryUsageOverlay(mothlight, source = source, retentionWatcher = retentionWatcher, onOpenRetention = onOpenRetention) } }
+    setContent { MaterialTheme { MemoryUsageOverlay(mothlight, source = source, retention = retention) } }
 }

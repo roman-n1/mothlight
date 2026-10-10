@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 /** Bounded, instance-owned event feed adapted from the original Debug panel. */
-class ProbeFeed<T>(private val capacity: Int, private val enabled: () -> Boolean = { true }) {
+class ProbeFeed<T : Any>(private val capacity: Int, private val enabled: () -> Boolean = { true }) {
     init { require(capacity > 0) }
     private val mutableItems = MutableStateFlow<List<T>>(emptyList())
     val items: StateFlow<List<T>> = mutableItems.asStateFlow()

@@ -5,9 +5,9 @@ import android.os.Debug
 actual fun readMemorySnapshot(): MemorySnapshot {
     val runtime = Runtime.getRuntime()
     return MemorySnapshot(
-        heapUsedBytes = runtime.totalMemory() - runtime.freeMemory(),
-        heapLimitBytes = runtime.maxMemory().takeIf { it > 0 && it != Long.MAX_VALUE },
-        auxiliaryBytes = Debug.getNativeHeapAllocatedSize().takeIf { it >= 0 },
+        heapUsedBytes = MemoryReading.bytes(runtime.totalMemory() - runtime.freeMemory()),
+        heapLimitBytes = MemoryReading.limit(runtime.maxMemory()),
+        auxiliaryBytes = MemoryReading.bytes(Debug.getNativeHeapAllocatedSize()),
         auxiliaryKind = AuxiliaryMemoryKind.NATIVE_HEAP,
     )
 }

@@ -37,12 +37,12 @@ private class TracingStatement(
 ) : SQLiteStatement by delegate {
     private var startedAt = nowMillis()
     private var stepped = false
-    private var errorType: String? = null
+    private var outcome: io.github.mothlight.SqlOutcome = io.github.mothlight.SqlOutcome.Succeeded
     override fun step(): Boolean {
         stepped = true
         return try { delegate.step() } catch (error: Throwable) {
             // Stable across shrinking and platforms; the original exception still reaches the caller.
-            errorType = "SqlError"
+            outcome = io.github.mothlight.SqlOutcome.Failed("SqlError")
             throw error
         }
     }
@@ -57,8 +57,8 @@ private class TracingStatement(
     }
     private fun finish() {
         if (!stepped) return
-        recorder.record(sql, startedAt, nowMillis() - startedAt, errorType)
+        recorder.record(sql, startedAt, nowMillis() - startedAt, outcome)
         stepped = false
-        errorType = null
+        outcome = io.github.mothlight.SqlOutcome.Succeeded
     }
 }

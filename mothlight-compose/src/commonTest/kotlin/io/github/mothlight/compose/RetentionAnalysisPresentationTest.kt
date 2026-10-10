@@ -10,7 +10,7 @@ class RetentionAnalysisPresentationTest {
             RetentionEntry(8, "second", "done", RetentionState.RETAINED, 0, 0),
         ))
         val rows = analysisRows(request, RetentionAnalysisResult.Report(listOf(
-            RetentionFinding(8, FindingStatus.NO_STRONG_PATH), RetentionFinding(4, FindingStatus.STRONG_PATH), RetentionFinding(99, FindingStatus.NOT_IN_DUMP),
+            RetentionFinding.NoStrongPath(8), RetentionFinding.StrongPath(4, RetainingPath("root", emptyList(), "Target", "sig")), RetentionFinding.NotInDump(99),
         )))
         assertEquals(listOf(AnalysisRow(8, "second", FindingStatus.NO_STRONG_PATH), AnalysisRow(4, "first", FindingStatus.STRONG_PATH)), rows)
         val running = RetentionSnapshot(WatcherMode.RUNNING, RetentionSupport.MANAGED_HEAP, retainedCount = 1)

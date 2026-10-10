@@ -12,7 +12,7 @@ interface DatabaseSource {
     fun changes(): Flow<Unit>
 }
 
-data class DatabasePage(val table: String, val columns: List<String>, val rows: List<List<String?>>, val totalRows: Long, val offset: Int, val limit: Int)
+data class DatabasePage(val table: String, val columns: List<String>, val rows: List<List<DatabaseCell>>, val totalRows: Long, val offset: Int, val limit: Int)
 
 /** No background scope: observation stops as soon as the caller cancels. */
 class DatabaseBrowser(private val source: DatabaseSource) {

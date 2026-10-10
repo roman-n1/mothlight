@@ -10,12 +10,18 @@ interface MemoryOverlayStore {
     fun write(enabled: Boolean)
 }
 
+/** No persistence: the owning settings instance keeps its own state. */
+object TransientMemoryOverlayStore : MemoryOverlayStore {
+    override fun read() = false
+    override fun write(enabled: Boolean) = Unit
+}
+
 /** One setting per Mothlight instance, independent of event recording. */
-class MemoryOverlaySettings(private val store: MemoryOverlayStore? = null) {
-    private val state = MutableStateFlow(store?.read() ?: false)
+class MemoryOverlaySettings(private val store: MemoryOverlayStore = TransientMemoryOverlayStore) {
+    private val state = MutableStateFlow(store.read())
     val enabled: StateFlow<Boolean> = state.asStateFlow()
     fun setEnabled(value: Boolean) {
-        store?.write(value)
+        store.write(value)
         state.value = value
     }
 }

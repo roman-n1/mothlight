@@ -13,8 +13,9 @@ fun buildCurlCommand(transaction: NetworkTransaction): String = buildString {
     if (transaction.requestHeaders.any { it.value == MASKED_HEADER_VALUE }) {
         append(" \\\n  -H ").append(shellQuote("Authorization: Bearer <PASTE_TOKEN>"))
     }
-    transaction.requestBody?.takeIf { it.isNotEmpty() }?.let { body ->
-        append(" \\\n  -d ").append(shellQuote(body))
+    val body = transaction.requestBody
+    if (body is CapturedBody.Text && body.value.isNotEmpty()) {
+        append(" \\\n  -d ").append(shellQuote(body.value))
     }
     append(" \\\n  ").append(shellQuote(transaction.url))
 }

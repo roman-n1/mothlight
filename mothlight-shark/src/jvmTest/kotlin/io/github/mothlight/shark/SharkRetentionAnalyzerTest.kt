@@ -27,11 +27,11 @@ class SharkRetentionAnalyzerTest {
             val report = assertIs<RetentionAnalysisResult.Report>(jvmRetentionAnalyzer(firstCache).analyze(request))
             val finding = report.findings.single { it.watchId == retained }
             assertEquals(FindingStatus.STRONG_PATH, finding.status)
-            val path = assertNotNull(finding.path)
+            val path = assertIs<RetentionFinding.StrongPath>(finding).path
             assertTrue(path.references.any { it.ownerClass.endsWith("HeapRoots") && it.referenceName == "held" }, path.toString())
             assertFalse(path.references.any { it.referenceName == "referent" })
             assertTrue(path.targetClass.endsWith("FixtureTarget"))
-            assertEquals(path, report.findings.single { it.watchId == duplicate }.path)
+            assertEquals(path, assertIs<RetentionFinding.StrongPath>(report.findings.single { it.watchId == duplicate }).path)
             assertEquals(FindingStatus.NOT_IN_DUMP, report.findings.single { it.watchId == released }.status)
             assertTrue(firstCache.listFiles()!!.isEmpty(), "Raw heap dump must be deleted after success")
             HeapRoots.held = null

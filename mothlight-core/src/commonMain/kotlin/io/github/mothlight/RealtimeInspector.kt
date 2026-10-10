@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.updateAndGet
 
 enum class FrameDirection { INCOMING, OUTGOING }
 enum class ConnectionState { CONNECTING, CONNECTED, DISCONNECTED, RECONNECTING, FAILED }
-data class RealtimeFrame(val id: Long, val channel: String, val direction: FrameDirection, val payload: String?, val timestampMillis: Long)
+data class RealtimeFrame(val id: Long, val channel: String, val direction: FrameDirection, val payload: CapturedBody, val timestampMillis: Long)
 data class ConnectionEvent(val id: Long, val channel: String, val state: ConnectionState, val timestampMillis: Long)
 
 /** Transport-independent passive observer; never reads a socket or changes its lifecycle.

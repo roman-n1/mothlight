@@ -68,10 +68,10 @@ class SharkRetentionAnalyzer(
             val targets = mutableMapOf<Long, Long>()
             markerClass.instances.forEach { marker ->
                 context.ensureActive()
-                val session = marker[MARKER_CLASS, "sessionId"]?.value?.readAsJavaString()
-                val watchId = marker[MARKER_CLASS, "watchId"]?.value?.asLong
+                val session = marker[MARKER_CLASS, "sessionId"]?.value?.readAsJavaString() ?: return@forEach
+                val watchId = marker[MARKER_CLASS, "watchId"]?.value?.asLong ?: return@forEach
                 if (session == request.sessionId && watchId in requested) {
-                    marker["java.lang.ref.Reference", "referent"]?.value?.asNonNullObjectId?.let { targets[checkNotNull(watchId)] = it }
+                    marker["java.lang.ref.Reference", "referent"]?.value?.asNonNullObjectId?.let { targets[watchId] = it }
                 }
             }
             val idsByObject = targets.entries.groupBy({ it.value }, { it.key })
@@ -85,7 +85,7 @@ class SharkRetentionAnalyzer(
                 ),
                 computeRetainedHeapSize = false,
                 objectInspectors = listOf(ObjectInspector { reporter ->
-                    idsByObject[reporter.heapObject.objectId]?.let { ids ->
+                    idsByObject.getOrElse(reporter.heapObject.objectId) { emptyList() }.let { ids ->
                         reporter.leakingReasons += "Host reported that the lifetime ended"
                         ids.forEach { reporter.labels += ID_LABEL + it }
                     }
@@ -112,12 +112,8 @@ class SharkRetentionAnalyzer(
                 }
             }
             RetentionAnalysisResult.Report(request.entries.map { entry ->
-                val path = paths[entry.id]
-                when {
-                    path != null -> RetentionFinding(entry.id, FindingStatus.STRONG_PATH, path)
-                    entry.id in targets -> RetentionFinding(entry.id, FindingStatus.NO_STRONG_PATH)
-                    else -> RetentionFinding(entry.id, FindingStatus.NOT_IN_DUMP)
-                }
+                paths[entry.id]?.let { RetentionFinding.StrongPath(entry.id, it) }
+                    ?: if (entry.id in targets) RetentionFinding.NoStrongPath(entry.id) else RetentionFinding.NotInDump(entry.id)
             })
         }
     }

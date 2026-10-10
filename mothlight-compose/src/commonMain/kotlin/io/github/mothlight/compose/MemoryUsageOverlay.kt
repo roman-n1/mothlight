@@ -23,8 +23,7 @@ fun MemoryUsageOverlay(
     modifier: Modifier = Modifier,
     source: MemorySource = PlatformMemorySource,
     dispatcher: CoroutineDispatcher = Dispatchers.Default,
-    retentionWatcher: io.github.mothlight.retention.RetentionWatcher? = null,
-    onOpenRetention: (() -> Unit)? = null,
+    retention: RetentionOverlay = RetentionOverlay.Hidden,
 ) {
     val enabled by mothlight.memoryOverlay.enabled.collectAsState()
     if (enabled == false) return
@@ -35,7 +34,10 @@ fun MemoryUsageOverlay(
     val presentation = remember(snapshot) { memoryPresentation(snapshot) }
     Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
         MemoryBadge(presentation)
-        retentionWatcher?.let { RetentionBadge(it, onOpenRetention) }
+        when (retention) {
+            RetentionOverlay.Hidden -> Unit
+            is RetentionOverlay.Visible -> RetentionBadge(retention.watcher, retention.action)
+        }
     }
 }
 
@@ -81,6 +83,6 @@ private fun unitLabel(unit: MemoryUnit) = when (unit) {
 @Composable
 private fun MemoryBadgePreview() {
     MaterialTheme {
-        MemoryBadge(memoryPresentation(MemorySnapshot(400L * 1024 * 1024, 512L * 1024 * 1024, 64L * 1024 * 1024)))
+        MemoryBadge(memoryPresentation(MemorySnapshot(MemoryReading.Bytes(400L * 1024 * 1024), MemoryReading.Bytes(512L * 1024 * 1024), MemoryReading.Bytes(64L * 1024 * 1024))))
     }
 }

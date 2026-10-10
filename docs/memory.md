@@ -75,11 +75,11 @@ Headless consumers may use the `mothlight-memory` module and collect
 `observeMemory(settings, source)` with their own scope. Each collector owns its
 polling; mount one overlay per host window to avoid duplicate reads.
 
-Pass an optional `retentionWatcher` and `onOpenRetention` callback to add a live
+Pass `retention = RetentionOverlay.Visible(watcher, RetentionAction.OpenTool { /* open tool */ })` to add a live
 [retained-object badge and tool](retention.md). The tool supports an explicit GC
-request; ordinary memory sampling never forces GC. Heap analysis, dumps and
-long-press file export remain future work. See the [analysis proposal](leak-detection-design.md)
-for the remaining heap-analysis adapters. The original application's own settings are unchanged.
+request; ordinary memory sampling never forces GC. Android/JVM heap analysis is
+available through the separate Shark adapter. See the [analysis proposal](leak-detection-design.md)
+for the remaining native analysis work. The original application's own settings are unchanged.
 
 ## Platform dependencies
 
@@ -93,13 +93,17 @@ A host can use the existing typed `MemorySource` interface to combine standard
 JVM metrics with a native process reading:
 
 ```kotlin
-fun withNativeResidentReader(readResidentBytes: () -> Long?): MemorySource = MemorySource {
+fun withNativeResidentReader(readResidentBytes: () -> MemoryReading): MemorySource = MemorySource {
     PlatformMemorySource.read().copy(
-        processBytes = readResidentBytes()?.takeIf { it >= 0 },
+        processBytes = readResidentBytes(),
         processKind = ProcessMemoryKind.RESIDENT,
     )
 }
 ```
+
+`MemoryReading.Bytes(value)` represents a non-negative measurement, including zero.
+Return `MemoryReading.Unavailable` when the host cannot measure a value.
+`MemoryReading.bytes(rawValue)` normalizes negative platform readings to unavailable.
 
 Pass that source to `MemoryUsageOverlay` or `createMemoryOverlayView`. The callback
 must use the host's typed native bridge; Mothlight does not load a DLL or start a

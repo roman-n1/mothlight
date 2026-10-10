@@ -53,13 +53,16 @@ val tools = remember(mothlight, watcher) {
 MothlightPanel(mothlight, tools = tools, state = panelState)
 MemoryUsageOverlay(
     mothlight,
-    retentionWatcher = watcher,
-    onOpenRetention = {
+    retention = RetentionOverlay.Visible(watcher, RetentionAction.OpenTool {
         panelState.selectTool("retention")
         // Make your panel visible here if it is currently closed.
-    },
+    }),
 )
 ```
+
+Use `RetentionOverlay.Visible(watcher)` for a read-only badge, or the default
+`RetentionOverlay.Hidden` to omit it. `RetentionOverlay` and `RetentionAction` are
+in `io.github.mothlight.compose`.
 
 The memory switch controls badge visibility, not the watcher's lifetime. The
 retention tool shows the platform capability, current count, check outcome,
@@ -89,8 +92,7 @@ val panelState = MothlightPanelState()
 val tools = MothlightTools(defaultMothlightTools(mothlight).entries + retentionTool(watcher))
 val panel = createMothlightView(context, mothlight, tools, panelState)
 val badge = createMemoryOverlayView(context, mothlight,
-    retentionWatcher = watcher,
-    onOpenRetention = { panelState.selectTool("retention") },
+    retention = RetentionOverlay.Visible(watcher, RetentionAction.OpenTool { panelState.selectTool("retention") }),
 )
 ```
 
@@ -134,13 +136,14 @@ watcher with the same numeric IDs from contaminating the report. Weak/soft/phant
 object values, thread names, exception messages, dump paths or raw dump bytes are
 included in the report. Class/field names and host-provided labels remain diagnostic data.
 
-The common `RetentionAnalyzer` interface returns typed findings:
+Without a supplied analyzer, `UnsupportedRetentionAnalyzer` provides explicit
+unsupported behavior. The common `RetentionAnalyzer` interface returns typed findings:
 
-- `STRONG_PATH`: a strong path exists in this snapshot. This explains retention;
+- `RetentionFinding.StrongPath` (`STRONG_PATH`): a strong path exists in this snapshot. This explains retention;
   the host still owns the decision that the object's lifetime should have ended.
-- `NOT_IN_DUMP`: no matching live watched target. It may have been collected or
+- `RetentionFinding.NotInDump` (`NOT_IN_DUMP`): no matching live watched target. It may have been collected or
   its watch may have been cleared/evicted; this is not a new collection verdict.
-- `NO_STRONG_PATH`: the target exists, but the analyzer found no strong root path.
+- `RetentionFinding.NoStrongPath` (`NO_STRONG_PATH`): the target exists, but the analyzer found no strong root path.
   It is not presented as proof of collection.
 
 `RetentionAnalysisController` serializes requests. Clear, pause and close invalidate

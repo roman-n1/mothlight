@@ -93,7 +93,7 @@ class MainActivity : ComponentActivity() {
             }
         }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         layout.addView(retentionActions)
-        layout.addView(createMemoryOverlayView(this, mothlight, retentionWatcher = retentionWatcher, onOpenRetention = { panelState.selectTool("retention") }))
+        layout.addView(createMemoryOverlayView(this, mothlight, retention = RetentionOverlay.Visible(retentionWatcher, RetentionAction.OpenTool { panelState.selectTool("retention") })))
         layout.addView(createMothlightView(this, mothlight, tools, panelState), LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
         setContentView(layout)
     }

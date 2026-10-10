@@ -12,37 +12,44 @@ private const val MIB = 1024L * 1024
 private const val GIB = 1024L * MIB
 
 internal fun memoryPresentation(snapshot: MemorySnapshot): MemoryPresentation {
-    val used = snapshot.heapUsedBytes?.takeIf { it >= 0 }
-    val limit = snapshot.heapLimitBytes?.takeIf { it > 0 }
-    val fraction = if (used != null && limit != null) used.toDouble() / limit else null
+    val used = snapshot.heapUsedBytes
+    val limit = snapshot.heapLimitBytes
     val rows = buildList {
-        if (used != null) {
-            val unit = sizeUnit(limit ?: used)
-            val pair = if (limit == null) sizeValue(used, unit) else "${sizeValue(used, unit)}/${sizeValue(limit, unit)}"
-            add(MemoryRow(MemoryMetric.HEAP, pair, unit))
-            fraction?.let { add(MemoryRow(MemoryMetric.HEAP_USAGE, (it * 100).roundToInt().toString(), MemoryUnit.PERCENT)) }
+        if (used is MemoryReading.Bytes) {
+            if (limit is MemoryReading.Bytes && limit.value > 0) {
+                val unit = sizeUnit(limit.value)
+                add(MemoryRow(MemoryMetric.HEAP, "${sizeValue(used.value, unit)}/${sizeValue(limit.value, unit)}", unit))
+                add(MemoryRow(MemoryMetric.HEAP_USAGE, (used.value.toDouble() / limit.value * 100).roundToInt().toString(), MemoryUnit.PERCENT))
+            } else {
+                val unit = sizeUnit(used.value)
+                add(MemoryRow(MemoryMetric.HEAP, sizeValue(used.value, unit), unit))
+            }
         }
-        snapshot.auxiliaryBytes?.takeIf { it >= 0 }?.let {
+        val auxiliary = snapshot.auxiliaryBytes
+        if (auxiliary is MemoryReading.Bytes) {
             val metric = when (snapshot.auxiliaryKind) {
                 AuxiliaryMemoryKind.NATIVE_HEAP -> MemoryMetric.NATIVE_HEAP
                 AuxiliaryMemoryKind.JVM_NON_HEAP -> MemoryMetric.JVM_NON_HEAP
             }
-            add(MemoryRow(metric, sizeValue(it, sizeUnit(it)), sizeUnit(it)))
+            add(MemoryRow(metric, sizeValue(auxiliary.value, sizeUnit(auxiliary.value)), sizeUnit(auxiliary.value)))
         }
-        snapshot.processBytes?.takeIf { it >= 0 }?.let {
+        val process = snapshot.processBytes
+        if (process is MemoryReading.Bytes) {
             val metric = when (snapshot.processKind) {
                 ProcessMemoryKind.RESIDENT -> MemoryMetric.RESIDENT
                 ProcessMemoryKind.PHYSICAL_FOOTPRINT -> MemoryMetric.FOOTPRINT
             }
-            add(MemoryRow(metric, sizeValue(it, sizeUnit(it)), sizeUnit(it)))
+            add(MemoryRow(metric, sizeValue(process.value, sizeUnit(process.value)), sizeUnit(process.value)))
         }
     }
-    val pressure = when {
-        fraction == null -> MemoryPressure.NEUTRAL
-        fraction > 0.8 -> MemoryPressure.HIGH
-        fraction > 0.6 -> MemoryPressure.ELEVATED
-        else -> MemoryPressure.NEUTRAL
-    }
+    val pressure = if (used is MemoryReading.Bytes && limit is MemoryReading.Bytes && limit.value > 0) {
+        val fraction = used.value.toDouble() / limit.value
+        when {
+            fraction > 0.8 -> MemoryPressure.HIGH
+            fraction > 0.6 -> MemoryPressure.ELEVATED
+            else -> MemoryPressure.NEUTRAL
+        }
+    } else MemoryPressure.NEUTRAL
     return MemoryPresentation(rows, pressure)
 }
 

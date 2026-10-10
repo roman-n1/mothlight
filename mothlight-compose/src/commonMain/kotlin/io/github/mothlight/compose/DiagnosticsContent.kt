@@ -102,7 +102,10 @@ internal fun InvariantsContent(mothlight: Mothlight, modifier: Modifier) {
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(stringResource(Res.string.invariant_count, row.count.toString(), row.lastSeenAtMillis.toString()))
                             Text(stringResource(Res.string.invariant_severities, stringResource(severityLabel(row.highestSeverity)), stringResource(severityLabel(row.lastSeverity))))
-                            row.lastScreen?.let { Text(stringResource(Res.string.invariant_screen, it)) }
+                            when (val screen = row.lastScreen) {
+                                ScreenContext.Unspecified -> Unit
+                                is ScreenContext.Named -> Text(stringResource(Res.string.invariant_screen, screen.value))
+                            }
                             Text(localizedBody(row.lastSample))
                         }
                     })

@@ -7,6 +7,23 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.*
 
 class SQLiteToolsTest {
+    @Test fun malformedCountIsReportedAsExecutorContractFailure() = runTest {
+        val malformed = listOf(
+            emptyList(), listOf(emptyList()), listOf(listOf(DatabaseCell.SqlNull)),
+            listOf(listOf(DatabaseCell.Text("NaN"))), listOf(listOf(DatabaseCell.Text("-1"))),
+            listOf(listOf(DatabaseCell.Text("1"), DatabaseCell.Text("2"))),
+            listOf(listOf(DatabaseCell.Text("1")), listOf(DatabaseCell.Text("2"))),
+        )
+        for (rows in malformed) {
+            val reader = SQLiteDatabaseSource(SqlReadExecutor { sql, _ ->
+                if (sql.contains("sqlite_master")) SqlResult(listOf("name"), listOf(listOf(DatabaseCell.Text("items"))))
+                else SqlResult(listOf("count"), rows)
+            }, { flowOf(Unit) })
+            val failure = assertFailsWith<IllegalStateException> { reader.page("items", 1, 0) }
+            assertEquals("COUNT query must return one non-negative integer cell", failure.message)
+        }
+    }
+
     @Test fun readerBoundsPagesMasksColumnsAndNeverExecutesInjectedNames() = runTest {
         val connection = BundledSQLiteDriver().open(":memory:")
         try {
@@ -18,15 +35,27 @@ class SQLiteToolsTest {
             assertEquals(listOf("items"), reader.tables())
             val page = reader.page("items", 1, 1)
             assertEquals(3L, page.totalRows)
-            assertEquals(listOf("2", "two", "***", null), page.rows.single())
+            assertEquals(listOf(DatabaseCell.Text("2"), DatabaseCell.Text("two"), DatabaseCell.Text("***"), DatabaseCell.SqlNull), page.rows.single())
             assertEquals(listOf("id", "name", "token", "data"), page.columns)
-            assertEquals("[BLOB]", reader.page("items", 1, 0).rows.single().last())
-            assertNull(reader.page("items", 1, 2).rows.single()[1])
+            assertEquals(DatabaseCell.Blob, reader.page("items", 1, 0).rows.single().last())
+            assertEquals(DatabaseCell.SqlNull, reader.page("items", 1, 2).rows.single()[1])
             assertEquals(200, reader.page("items", 99999, 0).limit)
             assertFailsWith<IllegalArgumentException> { reader.page("items; DROP TABLE items", 10, 0) }
             assertEquals(3, reader.page("items", 50, 0).rows.size)
             assertFailsWith<IllegalArgumentException> { reader.page("items", 0, 0) }
             assertFailsWith<IllegalArgumentException> { reader.page("items", 10, -1) }
+        } finally { connection.close() }
+    }
+    @Test fun sqlNullEmptyTextAndLiteralBlobLabelRemainDistinct() = runTest {
+        val connection = BundledSQLiteDriver().open(":memory:")
+        try {
+            connection.prepare("CREATE TABLE cells (empty TEXT, missing TEXT, label TEXT, bytes BLOB)").use { it.step() }
+            connection.prepare("INSERT INTO cells VALUES ('', NULL, '[BLOB]', X'12')").use { it.step() }
+            val reader = SQLiteDatabaseSource(SqlReadExecutor { sql, maxRows ->
+                connection.prepare(sql).use { readResult(it, maxRows) { it.step() } }
+            }, { flowOf(Unit) })
+            assertEquals(listOf(DatabaseCell.Text(""), DatabaseCell.SqlNull, DatabaseCell.Text("[BLOB]"), DatabaseCell.Blob),
+                reader.page("cells", 10, 0).rows.single())
         } finally { connection.close() }
     }
     @Test fun tracingPreservesResultsExceptionsAndPreparedStatementReuseWithoutBindValues() {
@@ -48,7 +77,7 @@ class SQLiteToolsTest {
             assertFalse(trace.snapshot.value.toString().contains("secret"))
             connection.prepare("SELECT COUNT(*) FROM items").use { assertTrue(it.step()); assertEquals(2L, it.getLong(0)) }
             assertFails { connection.prepare("INSERT INTO items VALUES (1, NULL)").use { it.step() } }
-            assertEquals("SqlError", trace.snapshot.value.events.last().errorType)
+            assertEquals(SqlOutcome.Failed("SqlError"), trace.snapshot.value.events.last().outcome)
             connection.prepare(SqlTraceRecorder.PANEL_MARKER + "SELECT * FROM items").use { it.step() }
             assertEquals(4, trace.snapshot.value.events.size)
         } finally { connection.close() }
