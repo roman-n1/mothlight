@@ -89,7 +89,8 @@ closed. Tests exercise callback and nested generic nullability, escaped identifi
 aliases, generic bounds, templates, source discovery and Java boundary annotations.
 
 There is no suppression, baseline or file allow-list. The `null-contracts` check
-is required by main's ruleset once the migration is verified. Keep this check and
-its tests enabled. New hand-written presence containers disguised through unrelated
-names or arbitrary control flow must also be rejected during review: the scanner
-enforces source constructs, not a formal proof of all program behavior.
+is required by [main's active ruleset](https://github.com/roman-n1/mothlight/rules/24845776);
+new violations block merging. Keep this check and its tests enabled. New hand-written
+presence containers disguised through unrelated names or arbitrary control flow must
+also be rejected during review: the scanner enforces source constructs, not a formal
+proof of all program behavior.
