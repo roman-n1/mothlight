@@ -63,6 +63,10 @@ class MainActivity : ComponentActivity() {
                 }
             }
         })
+        layout.addView(Button(this).apply {
+            setText(R.string.diagnostic_scenario)
+            setOnClickListener { diagnosticScenario(mothlight) }
+        })
         layout.addView(createMothlightView(this, mothlight, tools), LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
         setContentView(layout)
     }

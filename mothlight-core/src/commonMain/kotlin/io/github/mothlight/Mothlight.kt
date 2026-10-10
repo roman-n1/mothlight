@@ -15,7 +15,17 @@ class Mothlight(capacity: Int = 200, redactor: Redactor = Redactor()) {
     val navigation = NavigationBreadcrumbs(capacity) { enabled.value }
     val invariants = InvariantRecorder(capacity, redactor = redactor, enabled = { enabled.value })
     fun setEnabled(value: Boolean) { network.setEnabled(value) }
-    fun clear() { network.clear(); logs.clear(); events.clear(); sql.clear(); realtime.clear(); startup.clear(); lifecycle.clear(); navigation.clear(); invariants.clear() }
+    fun clear() {
+        network.clear()
+        logs.clear()
+        events.clear()
+        sql.clear()
+        realtime.clear()
+        startup.clear()
+        lifecycle.clear()
+        navigation.clear()
+        invariants.clear()
+    }
 }
 
 enum class LogLevel { DEBUG, INFO, WARN, ERROR }

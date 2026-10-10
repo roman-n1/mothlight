@@ -41,4 +41,31 @@
     <string name="disconnected">Disconnected</string>
     <string name="reconnecting">Reconnecting</string>
     <string name="connection_failed">Failed</string>
+    <string name="startup">Startup</string>
+    <string name="lifecycle">Lifecycle</string>
+    <string name="navigation">Navigation</string>
+    <string name="invariants">Invariants</string>
+    <string name="startup_hint">Intervals between recorded milestones, relative to the first retained mark. The last interval is zero.</string>
+    <string name="startup_interval">Offset %1$s ms · interval %2$s ms</string>
+    <string name="lifecycle_hint">Balance = observed creations − destructions. Pauses and resets affect it; this is not proof of a leak.</string>
+    <string name="search_component">Filter component kinds</string>
+    <string name="diagnostic_counters">Counters</string>
+    <string name="diagnostic_history">History</string>
+    <string name="lifecycle_counts">%1$s created · %2$s destroyed · balance %3$s</string>
+    <string name="lifecycle_created">Created</string>
+    <string name="lifecycle_destroyed">Destroyed</string>
+    <string name="navigation_hint">Host-reported transitions. Use static route names without private arguments.</string>
+    <string name="search_destination">Filter destinations</string>
+    <string name="navigation_push">Push</string>
+    <string name="navigation_pop">Pop</string>
+    <string name="navigation_replace">Replace</string>
+    <string name="navigation_reset">Reset</string>
+    <string name="invariants_hint">Observed violations, ordered by highest severity and count. Reporting does not enforce rules.</string>
+    <string name="search_rule">Filter rules or screens</string>
+    <string name="invariant_count">%1$s reports · last timestamp %2$s</string>
+    <string name="invariant_severities">Highest: %1$s · last: %2$s</string>
+    <string name="invariant_screen">Screen: %1$s</string>
+    <string name="severity_info">Info</string>
+    <string name="severity_warning">Warning</string>
+    <string name="severity_error">Error</string>
 </resources>

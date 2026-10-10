@@ -41,4 +41,31 @@
     <string name="disconnected">Отключено</string>
     <string name="reconnecting">Переподключение</string>
     <string name="connection_failed">Ошибка соединения</string>
+    <string name="startup">Запуск</string>
+    <string name="lifecycle">Жизненный цикл</string>
+    <string name="navigation">Навигация</string>
+    <string name="invariants">Инварианты</string>
+    <string name="startup_hint">Интервалы между записанными вехами от первой сохранённой метки. Последний интервал равен нулю.</string>
+    <string name="startup_interval">Смещение %1$s мс · интервал %2$s мс</string>
+    <string name="lifecycle_hint">Баланс = наблюдаемые создания − уничтожения. Паузы и сброс влияют на него; это не доказательство утечки.</string>
+    <string name="search_component">Фильтр типов компонентов</string>
+    <string name="diagnostic_counters">Счётчики</string>
+    <string name="diagnostic_history">История</string>
+    <string name="lifecycle_counts">Создано %1$s · уничтожено %2$s · баланс %3$s</string>
+    <string name="lifecycle_created">Создан</string>
+    <string name="lifecycle_destroyed">Уничтожен</string>
+    <string name="navigation_hint">Переходы, переданные приложением. Используйте имена экранов без приватных аргументов.</string>
+    <string name="search_destination">Фильтр экранов</string>
+    <string name="navigation_push">Переход вперёд</string>
+    <string name="navigation_pop">Возврат</string>
+    <string name="navigation_replace">Замена</string>
+    <string name="navigation_reset">Сброс</string>
+    <string name="invariants_hint">Наблюдаемые нарушения по максимальной серьёзности и частоте. Запись не меняет выполнение правил.</string>
+    <string name="search_rule">Фильтр правил или экранов</string>
+    <string name="invariant_count">Срабатываний: %1$s · последняя метка времени: %2$s</string>
+    <string name="invariant_severities">Максимальная: %1$s · последняя: %2$s</string>
+    <string name="invariant_screen">Экран: %1$s</string>
+    <string name="severity_info">Информация</string>
+    <string name="severity_warning">Предупреждение</string>
+    <string name="severity_error">Ошибка</string>
 </resources>
