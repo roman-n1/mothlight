@@ -24,6 +24,26 @@ The lantern is your debug panel; the moths are the bugs coming into the light.
 > Mothlight extracts reusable debugging tools from a working application;
 > authentication, messaging, calls and product-specific tools stay with the host.
 
+## Null-free by design
+
+**Totally null-free contracts. Enforced in CI.**
+
+Mothlight's handwritten library code declares no nullable types and uses no `null`
+literals, `!!` assertions or `Optional` / `Option` / `Maybe` containers. Missing data
+has a meaningful domain state: a request is `InProgress`, a body is `NotCaptured`,
+a memory reading is `Unavailable`. Callers work with those states explicitly.
+
+This is a checked rule for future changes, too. The required
+[`null-contracts` CI check](.github/workflows/verify.yml) scans every library
+production source set, including newly added modules. New violations block merging
+into [protected `main`](https://github.com/roman-n1/mothlight/rules/24845776).
+There is no baseline, suppression or file allow-list.
+
+The guarantee covers Mothlight's own production contracts. Platform and third-party
+APIs may still return missing values; adapters handle those at the boundary. Tests,
+samples and generated code are outside the rule. See the
+[null-free policy and migration guide](docs/null-contracts.md) for the exact scope.
+
 ## What will you bring to light?
 
 | Follow the question | Find the evidence |
