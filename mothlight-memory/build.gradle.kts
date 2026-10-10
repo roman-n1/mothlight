@@ -12,7 +12,13 @@ kotlin {
     js { browser(); nodejs() }
     @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
     wasmJs { browser(); nodejs() }
+    targets.withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>().configureEach {
+        compilations.getByName("main").cinterops.create("memory") {
+            defFile(project.file("src/nativeInterop/cinterop/memory.def"))
+        }
+    }
     sourceSets {
+        jvmMain.dependencies { implementation("net.java.dev.jna:jna-platform:5.14.0") }
         commonMain.dependencies { api(project(":mothlight-core")) }
         commonTest.dependencies {
             implementation(kotlin("test"))

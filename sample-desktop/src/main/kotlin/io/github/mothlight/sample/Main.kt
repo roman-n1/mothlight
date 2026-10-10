@@ -44,6 +44,7 @@ fun main() = application {
                     OutlinedButton(onClick = { diagnosticScenario(demo.mothlight) }) { Text(stringResource(Res.string.diagnostic_scenario)) }
                     OutlinedButton(onClick = demo::log) { Text(stringResource(Res.string.add_log)) }
                 }
+                MemoryUsageOverlay(demo.mothlight)
                 MothlightPanel(demo.mothlight, Modifier.fillMaxWidth().weight(1f), tools)
             }
         }

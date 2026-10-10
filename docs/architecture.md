@@ -35,8 +35,12 @@ Package names, build conventions, privacy policy and UI integration were changed
 - The panel uses Material 3 and owns its localized resources.
 - Navigation, authentication, outbox, seeding, call control and business-domain
   inspectors stay in the application. A host may expose them as custom tools.
-- Database, socket and navigation-specific bundled plugins are follow-up work;
-  the custom-tool and diagnostic-event APIs already accept host-owned integrations.
+- Standard tools are architecture-neutral. Decompose component trees, framework
+  navigation/lifecycle hooks and concrete DI graph instrumentation stay in host
+  plugins. Generic lifecycle counters and navigation breadcrumbs accept explicit
+  values without retaining framework objects.
+- Room/SQLite adapters and passive socket recording are available; applications
+  own their connections, database lifetime and instrumentation hooks.
 
 ## Migrating an existing panel
 

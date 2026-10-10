@@ -1,10 +1,8 @@
 package io.github.mothlight.memory
 
 import io.github.mothlight.MemoryOverlaySettings
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 
 /** Metrics are distinct measurements; never add them together. Null means unavailable. */
 data class MemorySnapshot(
@@ -20,12 +18,30 @@ enum class ProcessMemoryKind { RESIDENT, PHYSICAL_FOOTPRINT }
 fun interface MemorySource { fun read(): MemorySnapshot }
 
 /** Cold observation: no scope, retained history, global hooks or work before collection. */
+@OptIn(ExperimentalCoroutinesApi::class)
 fun observeMemory(
     settings: MemoryOverlaySettings,
     source: MemorySource,
     intervalMillis: Long = 1_000,
     dispatcher: CoroutineDispatcher = Dispatchers.Default,
-): Flow<MemorySnapshot> = flowOf(MemorySnapshot())
+): Flow<MemorySnapshot> {
+    require(intervalMillis > 0) { "Memory sampling interval must be positive" }
+    return settings.enabled.flatMapLatest { enabled ->
+        if (!enabled) flowOf(MemorySnapshot()) else flow {
+            while (currentCoroutineContext().isActive) {
+                val snapshot = try {
+                    source.read()
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (_: Exception) {
+                    MemorySnapshot()
+                }
+                emit(snapshot)
+                delay(intervalMillis)
+            }
+        }.flowOn(dispatcher)
+    }.buffer(0)
+}
 
 /** Current process only; unsupported metrics stay null. */
 expect fun readMemorySnapshot(): MemorySnapshot

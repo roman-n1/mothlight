@@ -6,8 +6,9 @@ Its run history is the source of truth for the current commit's pass/fail status
 
 | Area | Automated check |
 | --- | --- |
-| Core | 23 JVM tests: gate, capacity, isolation, HTTP lifecycle, redaction, concurrency, cURL, live source cancellation, SQL statistics, realtime capture, typed diagnostics and concurrent writers |
-| Compose | 8 JVM tests: mapper behavior, detail formatting, tool registration contracts, database paging, SQL/channel filters, startup waterfall, lifecycle balance, invariant priority |
+| Core | 24 JVM tests: gate, capacity, isolation, HTTP lifecycle, redaction, concurrency, cURL, live source cancellation, SQL statistics, realtime capture, typed diagnostics and concurrent writers |
+| Compose | 12 JVM tests: mapper behavior, detail formatting, tool registration contracts, database paging, SQL/channel filters, startup waterfall, lifecycle balance, invariant priority |
+| Memory | Virtual-time start/stop/cancellation/recovery tests; live JVM heap and Linux/Windows process readings; iOS physical footprint test |
 | Ktor | 4 JVM tests through MockEngine: response preservation, masking, disabled capture, error transparency |
 | OkHttp / Retrofit | 5 JVM tests through real OkHttp/Retrofit pipelines with a terminal mock transport |
 | SQLite | Real bundled SQLite tests on JVM and iOS simulator: bounded/masked pages, identifier rejection, tracing, statement reuse and errors |
@@ -44,6 +45,10 @@ can be consumed by a native Android project. The network module has no UI depend
   on empty histories, missing bounds and empty presentation rows. A four-writer
   JVM test also failed on the missing timeline before atomic snapshot updates.
   [Diagnostics RED run](https://github.com/roman-n1/mothlight/actions/runs/38051064039).
+
+- Memory settings, polling lifecycle, platform readings and presentation first
+  failed against inert implementations (9 JVM failures).
+  [Memory RED run](https://github.com/roman-n1/mothlight/actions/runs/38052246436).
 
 ## Limits
 

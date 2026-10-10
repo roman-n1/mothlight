@@ -43,7 +43,7 @@ The tool has counters and an event history, filtered by component kind. Its
 balance is observed creations minus observed destructions. It can be negative
 when observation begins after creation, pauses, or counters are reset/evicted.
 A positive balance is not proof of a leak. Object identity, expected retained
-instances and a component-tree source would be needed for that conclusion.
+instances and host-specific ownership evidence would be needed for that conclusion.
 
 Feed capacity and distinct-kind capacity are separate. Counters outlive event
 feed eviction; the least recently reported kind is evicted at the kind limit.
@@ -97,7 +97,7 @@ context or capture application/domain objects.
 
 ## What remains separate
 
-Component tree inspection and churn analysis, arbitrary timed spans, automatic
-platform/framework hooks and unified flight-recorder export are not part of this
-tranche. The public snapshots and custom tool API are available to integrate
-host-owned sources without a global registry.
+Decompose component trees, framework lifecycle/navigation hooks and concrete DI
+instrumentation are excluded from the standard library. Hosts may expose them
+through custom tools. Generic timed spans and unified flight-recorder export
+remain possible future extractions; they must not impose an application architecture.

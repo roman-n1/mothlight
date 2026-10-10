@@ -68,4 +68,16 @@
     <string name="severity_info">Информация</string>
     <string name="severity_warning">Предупреждение</string>
     <string name="severity_error">Ошибка</string>
+    <string name="show_memory_usage">Показывать потребление памяти</string>
+    <string name="memory_unavailable">Данные о памяти недоступны</string>
+    <string name="memory_metric_value">%1$s %2$s %3$s</string>
+    <string name="memory_heap">Куча</string>
+    <string name="memory_heap_usage">Загрузка кучи</string>
+    <string name="memory_native">Нативная куча</string>
+    <string name="memory_non_heap">JVM вне кучи</string>
+    <string name="memory_resident">RSS процесса</string>
+    <string name="memory_footprint">Физическая память процесса</string>
+    <string name="memory_mib">МиБ</string>
+    <string name="memory_gib">ГиБ</string>
+    <string name="memory_percent">%</string>
 </resources>

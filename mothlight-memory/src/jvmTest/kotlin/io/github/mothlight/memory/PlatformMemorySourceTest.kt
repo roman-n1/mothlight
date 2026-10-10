@@ -1,6 +1,5 @@
 package io.github.mothlight.memory
 
-import java.lang.management.ManagementFactory
 import kotlin.test.*
 
 class PlatformMemorySourceTest {
