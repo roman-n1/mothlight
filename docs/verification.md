@@ -9,7 +9,7 @@ Its run history is the source of truth for the current commit's pass/fail status
 | Core | 24 JVM tests: gate, capacity, isolation, HTTP lifecycle, redaction, concurrency, cURL, live source cancellation, SQL statistics, realtime capture, typed diagnostics and concurrent writers |
 | Compose | 15 JVM tests: retention filtering and panel selection, mapper behavior, detail formatting, tool registration contracts, database paging, SQL/channel filters, startup waterfall, lifecycle balance, invariant priority |
 | Retention | 8 common virtual-time/lifecycle tests, JVM concurrent writers and rooted weak reference, iOS real released-versus-rooted weak references |
-| Memory | Virtual-time start/stop/cancellation/recovery tests; live JVM heap and Linux/Windows process readings; iOS physical footprint test |
+| Memory | Virtual-time start/stop/cancellation/recovery tests; live JVM heap, Linux resident readings and explicit Windows process unavailability; iOS physical footprint test |
 | Ktor | 4 JVM tests through MockEngine: response preservation, masking, disabled capture, error transparency |
 | OkHttp / Retrofit | 5 JVM tests through real OkHttp/Retrofit pipelines with a terminal mock transport |
 | SQLite | Real bundled SQLite tests on JVM and iOS simulator: bounded/masked pages, identifier rejection, tracing, statement reuse and errors |
@@ -18,6 +18,7 @@ Its run history is the source of truth for the current commit's pass/fail status
 | Android | Native Views + Retrofit + Room 2 sample debug APK and release APK with R8 enabled |
 | iOS | Core and SQLite tests in the arm64 simulator; Compose, Ktor and both Room adapters compiled for the simulator |
 | Web | Compose and Ktor compilation for JS and Wasm, including core dependencies |
+| Shrinking | Reflection guard and consumer files packaged in all Android AARs; actual R8 renaming and preserved demo root checked from release mapping |
 | Localization | Complete English/Russian keys and matching formatting arguments |
 
 The Android sample has no Compose compiler plugin, verifying that the View adapter
@@ -58,6 +59,12 @@ can be consumed by a native Android project. The network module has no UI depend
 - Retention observation, native weak reachability and presentation first failed
   against inert implementations on JVM, Windows and the iOS simulator.
   [Retention RED run](https://github.com/roman-n1/mothlight/actions/runs/38053741244).
+
+- Reflection-free diagnostics first failed on the old exception class names in
+  Ktor, OkHttp and SQLite (JVM and iOS); Windows failed on the removed JNA metric.
+  [No-reflection RED run](https://github.com/roman-n1/mothlight/actions/runs/38054898119).
+- The local shrinker guard first failed on missing consumer wiring, then identified
+  JNA and the three runtime class-name lookups before their removal.
 
 ## Limits
 

@@ -55,7 +55,7 @@ asynchronous persistence in the host. Programmatic control uses
 | Android | ART heap used/limit; allocated native heap |
 | JVM | Managed heap used/limit; JVM non-heap (metaspace/code cache, not all native allocations) |
 | JVM on Linux | Additionally current-process resident memory from `/proc/self/status` |
-| JVM on Windows | Additionally current-process working set through JNA/PSAPI |
+| JVM on Windows | Heap and non-heap; process working set requires a host adapter |
 | JVM on macOS | Heap and non-heap; no built-in process footprint reader |
 | iOS | Current-process physical footprint via Mach; no invented JVM heap or limit |
 | JS / Wasm | Explicit unavailable message; no portable process-memory API used |
@@ -79,16 +79,29 @@ Pass an optional `retentionWatcher` and `onOpenRetention` callback to add a live
 [retained-object badge and tool](retention.md). The tool supports an explicit GC
 request; ordinary memory sampling never forces GC. Heap analysis, dumps and
 long-press file export remain future work. See the [analysis proposal](leak-detection-design.md)
-for the planned independent watcher and platform analysis adapters. The original application's own settings are unchanged.
+for the remaining heap-analysis adapters. The original application's own settings are unchanged.
 
 ## Platform dependencies
 
-JNA 5.14.0 is confined to the JVM variant of `mothlight-memory`; Android has no
-JNA/reflection dependency. Its PSAPI binding ships targeted rules in
-`META-INF/proguard/mothlight-memory.pro`; a JVM obfuscator must consume these
-rules and the rules required by JNA itself. Android platform calls are direct and require no
-new R8 keep rules. The native Android sample's release build exercises R8.
-The iOS Mach reader is built through cinterop; it calls a system API and ships
-no third-party native binary.
+The module has no JNA dependency or reflective native binding. Android calls are
+direct. The iOS Mach reader is built through cinterop; it calls a system API and
+ships no third-party native binary. On JVM 17, Windows process working set is
+unavailable without a native host adapter; virtual committed memory is never
+substituted for physical resident memory. JVM heap and non-heap still work.
 
-Platform references: [PSAPI](https://learn.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-getprocessmemoryinfo), [JNA license](https://github.com/java-native-access/jna/blob/5.14.0/LICENSE).
+A host can use the existing typed `MemorySource` interface to combine standard
+JVM metrics with a native process reading:
+
+```kotlin
+fun withNativeResidentReader(readResidentBytes: () -> Long?): MemorySource = MemorySource {
+    PlatformMemorySource.read().copy(
+        processBytes = readResidentBytes()?.takeIf { it >= 0 },
+        processKind = ProcessMemoryKind.RESIDENT,
+    )
+}
+```
+
+Pass that source to `MemoryUsageOverlay` or `createMemoryOverlayView`. The callback
+must use the host's typed native bridge; Mothlight does not load a DLL or start a
+shell process on every sample. See [minification](minification.md) for packaged
+consumer rules and their verification.

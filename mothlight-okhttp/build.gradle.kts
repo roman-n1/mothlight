@@ -1,6 +1,12 @@
 plugins { id("com.android.kotlin.multiplatform.library"); kotlin("multiplatform"); `maven-publish` }
 kotlin {
     android {
+        optimization {
+            consumerKeepRules.apply {
+                publish = true
+                file(rootProject.file("consumer-rules.pro"))
+            }
+        }
         namespace = "io.github.mothlight.okhttp"
         compileSdk = 37
         minSdk = 23

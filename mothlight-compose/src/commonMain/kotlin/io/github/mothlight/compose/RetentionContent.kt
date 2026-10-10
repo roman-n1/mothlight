@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.mothlight.compose.resources.*
 import io.github.mothlight.retention.*
@@ -109,4 +110,13 @@ private fun stateLabel(state: RetentionState) = when (state) {
     RetentionState.WATCHING -> Res.string.retention_watching
     RetentionState.RETAINED -> Res.string.retention_retained
     RetentionState.COLLECTED -> Res.string.retention_collected
+}
+
+@Preview
+@Composable
+private fun RetentionPreview() {
+    val scope = rememberCoroutineScope()
+    val watcher = remember(scope) { RetentionWatcher(scope) }
+    DisposableEffect(watcher) { onDispose { watcher.close() } }
+    MaterialTheme { RetentionContent(watcher, Modifier.size(400.dp, 600.dp)) }
 }

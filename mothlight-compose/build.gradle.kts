@@ -1,6 +1,12 @@
 plugins { id("com.android.kotlin.multiplatform.library"); kotlin("multiplatform"); kotlin("plugin.compose"); id("org.jetbrains.compose"); `maven-publish` }
 kotlin {
     android {
+        optimization {
+            consumerKeepRules.apply {
+                publish = true
+                file(rootProject.file("consumer-rules.pro"))
+            }
+        }
         namespace = "io.github.mothlight.compose"
         compileSdk = 37
         minSdk = 23

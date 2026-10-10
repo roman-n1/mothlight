@@ -35,8 +35,8 @@ fun HttpClientConfig<*>.installMothlight(inspector: NetworkInspector) {
                     null, getTimeMillis())
                 call
             } catch (cause: Throwable) {
-                // Exception messages can contain credentials and URLs. Keep only the exception type.
-                inspector.recordFailure(id, cause::class.simpleName ?: "TransportError", getTimeMillis())
+                // Stable category: no credential-bearing message or reflective class name.
+                inspector.recordFailure(id, "TransportError", getTimeMillis())
                 throw cause
             }
         }

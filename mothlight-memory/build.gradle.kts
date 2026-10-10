@@ -1,6 +1,12 @@
 plugins { id("com.android.kotlin.multiplatform.library"); kotlin("multiplatform"); `maven-publish` }
 kotlin {
     android {
+        optimization {
+            consumerKeepRules.apply {
+                publish = true
+                file(rootProject.file("consumer-rules.pro"))
+            }
+        }
         namespace = "io.github.mothlight.memory"
         compileSdk = 37
         minSdk = 23
@@ -18,7 +24,6 @@ kotlin {
         }
     }
     sourceSets {
-        jvmMain.dependencies { implementation("net.java.dev.jna:jna-platform:5.14.0") }
         commonMain.dependencies { api(project(":mothlight-core")) }
         commonTest.dependencies {
             implementation(kotlin("test"))
