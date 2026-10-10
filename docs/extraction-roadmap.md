@@ -13,13 +13,16 @@ to build Mothlight.
 | SQL execution feed and query statistics | Available; SQLiteDriver wrapper | Query plans; separately labelled subscription heuristic |
 | Socket frames and connection history | Available; host-instrumented passive hooks | Optional transport adapters, not app-specific channel enums |
 | Startup phases and navigation timing | Typed startup milestones and interval waterfall available | Arbitrary timed spans and navigation timing |
-| Lifecycle counters and component trees | Typed counters and lifecycle history available | Owner-supplied tree snapshots, churn analysis |
-| Navigation breadcrumbs | Typed bounded trail with direction and filtering available | Optional framework adapters |
+| Lifecycle counters | Typed counters and lifecycle history available | Host reports creation/destruction; no framework required |
+| Decompose component tree | Host plugin; excluded from the standard library | Keep framework object graphs and tree traversal in the host |
+| Navigation breadcrumbs | Typed bounded trail with direction and filtering available | Framework hooks belong to host integrations |
 | Invariant counters and alarms | Counts, peak/last severity, masked samples and screen context available | Host-owned alert policy |
 | Capability and subscription diagnostics | Custom tool/source API | Typed portable contracts |
-| DI graph, singleton identity diagnostics | Custom tool/source API | Graph source contract and viewer without global registry |
+| DI graph, singleton identity diagnostics | Host plugin | Concrete DI instrumentation stays in the host |
 | Network latency/error simulation | Not yet extracted | Explicit opt-in adapter and deterministic rule tests |
 | Flight recorder and timeline export | Not yet extracted | Bounded unified capture, redacted export format |
+| Memory usage setting and overlay | Live heap/native/process metrics; Compose and Android Views | Host-owned persistence; no heap dumps or leak detector |
+| Retained objects / leak indicator | [Research and proposed adapters](leak-detection-design.md); not implemented | Portable watcher, live count and optional Shark/native analysis |
 | UI switches, crash triggers | Host plugin | Actions remain explicitly owned by the application |
 | Sessions, quick login, outbox, message seeder, call tools | Host plugin | Keep product models and actions outside the library |
 

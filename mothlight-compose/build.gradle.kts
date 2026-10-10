@@ -15,6 +15,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(project(":mothlight-core"))
+            api(project(":mothlight-memory"))
             api("org.jetbrains.compose.runtime:runtime:1.11.1")
             api("org.jetbrains.compose.ui:ui:1.11.1")
             implementation("org.jetbrains.compose.foundation:foundation:1.11.1")

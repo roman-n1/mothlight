@@ -19,3 +19,14 @@ fun createMothlightView(context: Context, mothlight: Mothlight, tools: Mothlight
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         setContent { MaterialTheme { MothlightPanel(mothlight, tools = tools) } }
     }
+
+/** Attach at the host boundary. Detaching this view stops memory sampling. */
+@JvmOverloads
+fun createMemoryOverlayView(
+    context: Context,
+    mothlight: Mothlight,
+    source: io.github.mothlight.memory.MemorySource = io.github.mothlight.memory.PlatformMemorySource,
+): ComposeView = ComposeView(context).apply {
+    setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindowOrReleasedFromPool)
+    setContent { MaterialTheme { MemoryUsageOverlay(mothlight, source = source) } }
+}

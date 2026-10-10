@@ -6,6 +6,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import io.github.mothlight.Mothlight
@@ -21,6 +24,8 @@ fun MothlightPanel(
 ) {
     var selectedId by remember(tools) { mutableStateOf(tools.entries.first().id) }
     val enabled by mothlight.enabled.collectAsState()
+    val memoryVisible by mothlight.memoryOverlay.enabled.collectAsState()
+    val memoryLabel = stringResource(Res.string.show_memory_usage)
     Surface(modifier) {
         Column(Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Column(Modifier.fillMaxWidth()) {
@@ -31,6 +36,11 @@ fun MothlightPanel(
                     }
                     TextButton(onClick = mothlight::clear) { Text(stringResource(Res.string.clear_all)) }
                 }
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text(memoryLabel, style = MaterialTheme.typography.bodyMedium)
+                Switch(checked = memoryVisible, onCheckedChange = mothlight.memoryOverlay::setEnabled,
+                    modifier = Modifier.semantics { contentDescription = memoryLabel })
             }
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 tools.entries.forEach { tool ->

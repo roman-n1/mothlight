@@ -24,7 +24,7 @@ jobs:
       - run: sdkmanager 'platforms;android-37.0' 'build-tools;36.0.0'
       - uses: gradle/actions/setup-gradle@v4
       - run: python3 scripts/check_resources.py
-      - run: ./gradlew :mothlight-core:jvmTest :mothlight-sqlite:jvmTest :mothlight-room:jvmTest :mothlight-room3:jvmTest :mothlight-compose:jvmTest :mothlight-ktor:jvmTest :mothlight-okhttp:jvmTest :sample-desktop:classes :sample-android:assembleDebug :sample-android:assembleRelease --continue
+      - run: ./gradlew :mothlight-core:jvmTest :mothlight-memory:jvmTest :mothlight-sqlite:jvmTest :mothlight-room:jvmTest :mothlight-room3:jvmTest :mothlight-compose:jvmTest :mothlight-ktor:jvmTest :mothlight-okhttp:jvmTest :sample-desktop:classes :sample-android:assembleDebug :sample-android:assembleRelease --continue
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -46,7 +46,7 @@ jobs:
           log-accepted-android-sdk-licenses: false
       - run: sdkmanager 'platforms;android-37.0' 'build-tools;36.0.0'
       - uses: gradle/actions/setup-gradle@v4
-      - run: ./gradlew :mothlight-core:iosSimulatorArm64Test :mothlight-sqlite:iosSimulatorArm64Test :mothlight-room:compileKotlinIosSimulatorArm64 :mothlight-room3:compileKotlinIosSimulatorArm64 :mothlight-compose:compileKotlinIosSimulatorArm64 :mothlight-ktor:compileKotlinIosSimulatorArm64 :mothlight-compose:compileKotlinJs :mothlight-compose:compileKotlinWasmJs :mothlight-ktor:compileKotlinJs :mothlight-ktor:compileKotlinWasmJs --continue
+      - run: ./gradlew :mothlight-core:iosSimulatorArm64Test :mothlight-memory:iosSimulatorArm64Test :mothlight-sqlite:iosSimulatorArm64Test :mothlight-room:compileKotlinIosSimulatorArm64 :mothlight-room3:compileKotlinIosSimulatorArm64 :mothlight-compose:compileKotlinIosSimulatorArm64 :mothlight-ktor:compileKotlinIosSimulatorArm64 :mothlight-compose:compileKotlinJs :mothlight-compose:compileKotlinWasmJs :mothlight-ktor:compileKotlinJs :mothlight-ktor:compileKotlinWasmJs --continue
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -54,3 +54,24 @@ jobs:
           path: |
             **/build/reports/tests/
             **/build/test-results/
+
+  windows-memory:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
+      - run: sdkmanager 'platforms;android-37.0' 'build-tools;36.0.0'
+      - uses: gradle/actions/setup-gradle@v4
+      - run: .\gradlew.bat :mothlight-memory:jvmTest --console=plain
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-memory-test-results
+          path: mothlight-memory/build/test-results/

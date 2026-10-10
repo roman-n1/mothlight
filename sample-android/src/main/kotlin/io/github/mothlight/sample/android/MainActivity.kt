@@ -13,6 +13,7 @@ import android.widget.LinearLayout
 import androidx.activity.ComponentActivity
 import io.github.mothlight.*
 import io.github.mothlight.android.createMothlightView
+import io.github.mothlight.android.createMemoryOverlayView
 import io.github.mothlight.okhttp.MothlightInterceptor
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
@@ -67,6 +68,7 @@ class MainActivity : ComponentActivity() {
             setText(R.string.diagnostic_scenario)
             setOnClickListener { diagnosticScenario(mothlight) }
         })
+        layout.addView(createMemoryOverlayView(this, mothlight))
         layout.addView(createMothlightView(this, mothlight, tools), LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
         setContentView(layout)
     }

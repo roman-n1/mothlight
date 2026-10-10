@@ -7,7 +7,8 @@
 An extensible, in-app developer panel for Kotlin Multiplatform and native Android.
 Inspect HTTP traffic, live database rows, SQL execution and realtime frames.
 Inspect startup milestones, lifecycle observations, navigation breadcrumbs and
-invariant counters. Collect logs and add tools owned by your app.
+invariant counters. Show live memory usage over your app, collect logs and add
+tools owned by your app. Standard tools do not require Decompose or a DI framework.
 
 > Early alpha. This repository contains the reusable foundation extracted from an
 > existing application. It does not include that application's authentication,
@@ -18,6 +19,7 @@ invariant counters. Collect logs and add tools owned by your app.
 | Module | Purpose | Needs Compose in your app? |
 | --- | --- | --- |
 | `mothlight-core` | Instance-owned recording, bounded feeds, HTTP model and redaction | No |
+| `mothlight-memory` | Platform memory readings and cancellable observation | No |
 | `mothlight-compose` | Material 3 panel and custom tool API | Yes |
 | `mothlight-ktor` | Passive Ktor client integration | No |
 | `mothlight-okhttp` | OkHttp interceptor, also works with Retrofit | No |
@@ -32,6 +34,9 @@ English is the fallback language. Russian is selected automatically for a Russia
 application locale. Panel strings, hints and sample controls are localized.
 Application-supplied log messages, exception type names and HTTP protocol values
 are data and are not translated.
+
+The optional [memory overlay](docs/memory.md) has a panel switch, per-instance
+settings and Compose/native Android View integration.
 
 ## Try it
 
