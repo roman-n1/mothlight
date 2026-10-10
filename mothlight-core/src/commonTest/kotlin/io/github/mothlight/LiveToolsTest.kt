@@ -50,7 +50,7 @@ class LiveToolsTest {
         val snapshot = trace.snapshot.value
         assertEquals(listOf("SELECT b", "SELECT a"), snapshot.events.map { it.sql })
         assertEquals(SqlQueryStat("SELECT a", 2, 0, 10, 7), snapshot.queries.first { it.sql == "SELECT a" })
-        assertEquals(1, snapshot.queries.first { it.sql == "SELECT b" }.failures)
+        assertEquals(1L, snapshot.queries.first { it.sql == "SELECT b" }.failures)
         val lastId = snapshot.events.last().id
         trace.record("SELECT c", 5, 1)
         assertEquals(setOf("SELECT a", "SELECT c"), trace.snapshot.value.queries.map { it.sql }.toSet())
