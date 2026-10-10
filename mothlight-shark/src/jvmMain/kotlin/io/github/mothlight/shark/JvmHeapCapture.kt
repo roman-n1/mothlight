@@ -11,7 +11,7 @@ fun jvmRetentionAnalyzer(directory: File): SharkRetentionAnalyzer = SharkRetenti
         val suffix = if (System.getProperty("os.name").startsWith("Windows")) ".exe" else ""
         val executable = File(System.getProperty("java.home"), "bin/jcmd$suffix")
         if (!executable.isFile) throw UnsupportedOperationException("JDK heap capture unavailable")
-        val process = ProcessBuilder(executable.absolutePath, ProcessHandle.current().pid().toString(), "GC.heap_dump", destination.absolutePath)
+        val process = ProcessBuilder(executable.absolutePath, ProcessHandle.current().pid().toString(), "GC.heap_dump", heapDumpArgument(destination))
             .redirectErrorStream(true).redirectOutput(ProcessBuilder.Redirect.DISCARD).start()
         try {
             check(process.waitFor(60, TimeUnit.SECONDS)) { "Heap capture timed out" }
@@ -27,3 +27,17 @@ fun jvmRetentionAnalyzer(directory: File): SharkRetentionAnalyzer = SharkRetenti
         }
     }
 })
+
+
+private fun heapDumpArgument(destination: File): String {
+    val path = destination.absolutePath
+    // jcmd joins argv and reparses it as a diagnostic command (not a shell command).
+    // Quote that second grammar; reject line breaks and paths it cannot represent faithfully.
+    if (path.any { it == '\n' || it == '\r' || it == '\u0000' }) throw UnsupportedOperationException("Unsupported heap dump path")
+    val quote = when {
+        '"' !in path -> '"'
+        '\'' !in path -> '\''
+        else -> throw UnsupportedOperationException("Unsupported heap dump path")
+    }
+    return "$quote$path$quote"
+}

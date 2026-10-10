@@ -12,6 +12,8 @@ class SharkRetentionAnalyzerTest {
         val watcher = RetentionWatcher(scope, graceMillis = 0)
         val other = RetentionWatcher(scope, graceMillis = 0)
         val directory = Files.createTempDirectory("mothlight analysis cache ").toFile()
+        val firstCache = File(directory, "double \"quoted\" cache").apply { mkdir() }
+        val secondCache = File(directory, "single 'quoted' cache").apply { mkdir() }
         try {
             watcher.setEnabled(true); other.setEnabled(true)
             val retained = registerRoot(watcher)
@@ -22,7 +24,7 @@ class SharkRetentionAnalyzerTest {
             val request = watcher.analysisRequest()
             assertEquals(setOf(retained, duplicate, released), request.entries.map { it.id }.toSet())
             HeapRoots.released = null
-            val report = assertIs<RetentionAnalysisResult.Report>(jvmRetentionAnalyzer(directory).analyze(request))
+            val report = assertIs<RetentionAnalysisResult.Report>(jvmRetentionAnalyzer(firstCache).analyze(request))
             val finding = report.findings.single { it.watchId == retained }
             assertEquals(FindingStatus.STRONG_PATH, finding.status)
             val path = assertNotNull(finding.path)
@@ -31,12 +33,23 @@ class SharkRetentionAnalyzerTest {
             assertTrue(path.targetClass.endsWith("FixtureTarget"))
             assertEquals(path, report.findings.single { it.watchId == duplicate }.path)
             assertEquals(FindingStatus.NOT_IN_DUMP, report.findings.single { it.watchId == released }.status)
-            assertTrue(directory.listFiles()!!.isEmpty(), "Raw heap dump must be deleted after success")
+            assertTrue(firstCache.listFiles()!!.isEmpty(), "Raw heap dump must be deleted after success")
             HeapRoots.held = null
-            val second = assertIs<RetentionAnalysisResult.Report>(jvmRetentionAnalyzer(directory).analyze(request))
+            val second = assertIs<RetentionAnalysisResult.Report>(jvmRetentionAnalyzer(secondCache).analyze(request))
             assertTrue(second.findings.all { it.status == FindingStatus.NOT_IN_DUMP })
-            assertTrue(directory.listFiles()!!.isEmpty())
+            assertTrue(secondCache.listFiles()!!.isEmpty())
         } finally { HeapRoots.held = null; HeapRoots.decoy = null; HeapRoots.released = null; watcher.close(); other.close(); scope.cancel(); directory.deleteRecursively() }
+    }
+    @Test fun unrepresentableDiagnosticPathsAreRejectedBeforeCapture() = runBlocking {
+        val parent = Files.createTempDirectory("mothlight-invalid-path").toFile()
+        val request = RetentionAnalysisRequest("session", 0, listOf(RetentionEntry(1, "target", "disposed", RetentionState.RETAINED, 0, 0)))
+        try {
+            for (name in listOf("line\nbreak", "both'\"quotes")) {
+                val directory = File(parent, name).apply { mkdir() }
+                assertEquals(RetentionAnalysisResult.Unsupported, jvmRetentionAnalyzer(directory).analyze(request))
+                assertTrue(directory.listFiles()!!.isEmpty())
+            }
+        } finally { parent.deleteRecursively() }
     }
     @Test fun corruptOversizedAndCancelledCapturesDeleteRawData() = runBlocking {
         val directory = Files.createTempDirectory("mothlight-failed-analysis").toFile()

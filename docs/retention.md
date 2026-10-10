@@ -121,7 +121,9 @@ as retained. No capture runs on tool open or during the watcher's periodic check
 The tool offers cancellation; closing the tool cancels its analysis coroutine.
 Heap capture itself can pause the VM and is not safely interruptible, so cancellation
 waits for the writer to finish before removing the file. `jcmd` is invoked directly,
-without a shell or reflective MXBean lookup. The capturer can also be explicitly
+without a shell or reflective MXBean lookup. Paths with spaces or either kind of
+quote are supported; paths containing both kinds of quotes or line breaks are
+rejected before invoking the diagnostic command. The capturer can also be explicitly
 injected through `HeapDumpCapture`; it must stop all writers before returning or throwing.
 
 Reports show a GC-root category, ordered references/fields, the target class and a

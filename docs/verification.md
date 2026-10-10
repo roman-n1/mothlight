@@ -71,6 +71,11 @@ can be consumed by a native Android project. The network module has no UI depend
   had no stable identifier for the analyzer.
   [Heap identity RED run](https://github.com/roman-n1/mothlight/actions/runs/38056908180).
 
+- Desktop capture failed with the same real-heap test when only the cache path
+  was changed to contain spaces. The adapter now quotes the JVM diagnostic-command
+  argument separately from process arguments and tests both quote styles.
+  [Desktop path RED run](https://github.com/roman-n1/mothlight/actions/runs/38057780495).
+
 ## Limits
 
 No Android device/emulator UI smoke, iOS panel rendering, browser runtime smoke,

@@ -6,3 +6,7 @@
 local.properties
 .DS_Store
 kotlin-js-store/
+
+# Heap snapshots may contain application data.
+*.hprof
+*.hprof.gz
