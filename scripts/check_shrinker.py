@@ -61,7 +61,7 @@ def check_artifacts():
     configuration = (output / "configuration.txt").read_text()
     assert not re.search(r"(?m)^-dont(?:obfuscate|shrink|optimize)\b", configuration), "R8 protection was disabled"
     mapping = (output / "mapping.txt").read_text()
-    renamed = [(a, b) for a, b in re.findall(r"(?m)^(io\.github\.mothlight\.[^ ]+) -> ([^:]+):$", mapping) if a != b]
+    renamed = [(a, b) for a, b in re.findall(r"(?m)^(io\.github\.mothlight\.[^ ]+) -> ([^:]+):$", mapping) if a != b and not b.startswith("R8$$") and not a.startswith("io.github.mothlight.sample.")]
     assert renamed, "No Mothlight classes were actually obfuscated"
     # R8 may omit identity member mappings. Inspect the output DEX, not that omission.
     seeds = (output / "seeds.txt").read_text()
