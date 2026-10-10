@@ -48,7 +48,7 @@ class SQLiteToolsTest {
             assertFalse(trace.snapshot.value.toString().contains("secret"))
             connection.prepare("SELECT COUNT(*) FROM items").use { assertTrue(it.step()); assertEquals(2L, it.getLong(0)) }
             assertFails { connection.prepare("INSERT INTO items VALUES (1, NULL)").use { it.step() } }
-            assertNotNull(trace.snapshot.value.events.last().errorType)
+            assertEquals("SqlError", trace.snapshot.value.events.last().errorType)
             connection.prepare(SqlTraceRecorder.PANEL_MARKER + "SELECT * FROM items").use { it.step() }
             assertEquals(4, trace.snapshot.value.events.size)
         } finally { connection.close() }

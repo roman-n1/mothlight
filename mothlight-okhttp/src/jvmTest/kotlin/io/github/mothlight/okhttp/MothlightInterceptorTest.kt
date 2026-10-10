@@ -49,7 +49,7 @@ class MothlightInterceptorTest {
             client.newCall(Request.Builder().url("https://example.test").build()).execute()
         }
         assertSame(failure, caught)
-        assertEquals(Status.Failed("IOException"), inspector.transactions.value.single().status)
+        assertEquals(Status.Failed("TransportError"), inspector.transactions.value.single().status)
     }
     @Test fun oneShotUploadIsNotReadByInspector() {
         val inspector = NetworkInspector(redactor = Redactor(captureJsonBodies = true))
