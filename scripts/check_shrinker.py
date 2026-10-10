@@ -8,7 +8,7 @@ import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-MODULES = ["core", "compose", "ktor", "memory", "retention", "room", "room3", "sqlite", "okhttp"]
+MODULES = ["core", "compose", "ktor", "memory", "retention", "shark", "room", "room3", "sqlite", "okhttp"]
 
 
 def check_sources():
@@ -57,6 +57,12 @@ def check_artifacts():
         with zipfile.ZipFile(jar) as archive:
             assert "META-INF/proguard/mothlight-memory.pro" not in archive.namelist(), "Obsolete JNA rules packaged"
             assert not any("ProcessMemoryApi" in name or "ProcessMemoryCounters" in name for name in archive.namelist()), "JNA binding is still packaged"
+    retention_jars = [p for p in (ROOT / "mothlight-retention/build/libs").glob("*-jvm-*.jar") if "sources" not in p.name]
+    assert retention_jars, "No retention JVM JAR to inspect"
+    for jar in retention_jars:
+        with zipfile.ZipFile(jar) as archive:
+            schema_rules = archive.read("META-INF/proguard/mothlight-retention.pro").decode()
+            assert "HeapWatchReference" in schema_rules and "watchId" in schema_rules and "sessionId" in schema_rules
     output = ROOT / "sample-android/build/outputs/mapping/release"
     configuration = (output / "configuration.txt").read_text()
     assert not re.search(r"(?m)^-dont(?:obfuscate|shrink|optimize)\b", configuration), "R8 protection was disabled"
@@ -77,6 +83,12 @@ def check_artifacts():
     (output / "retention-root.smali").write_text(smali)
     assert re.search(r"(?m)^\.field[^\n]*\bheldObject:Ljava/lang/Object;", smali), "Demo root field absent from release DEX"
     assert re.search(r"iput-object[^\n]*->heldObject:Ljava/lang/Object;", smali), "Release DEX never stores the demo root"
+    marker = subprocess.run([analyzer, "dex", "code", "--class", "io.github.mothlight.retention.HeapWatchReference", str(apks[0])],
+                            check=True, capture_output=True, text=True).stdout
+    (output / "retention-marker.smali").write_text(marker)
+    for name, descriptor, instruction in [("watchId", "J", "iput-wide"), ("sessionId", "Ljava/lang/String;", "iput-object")]:
+        assert re.search(r"(?m)^\.field[^\n]*\b" + name + ":" + re.escape(descriptor), marker), f"Heap schema field {name} missing"
+        assert re.search(instruction + r"[^\n]*->" + name + ":" + re.escape(descriptor), marker), f"Heap schema field {name} is never written"
     print(f"Packaged consumer rules OK; R8 renamed {len(renamed)} Mothlight classes and preserved the deliberate demo root")
 
 

@@ -101,9 +101,70 @@ The samples deliberately hold a small synthetic object until the user presses
 Release. Use the recheck action afterward; there is no application/user data in
 this demonstration. Remove the watcher with its host scope.
 
-## Analysis remains a separate layer
+## Optional analysis of retention paths
 
-This module does not yet compute paths to GC roots, retained heap sizes or leak
-cause signatures. The [research/design](leak-detection-design.md) describes Shark
-integration for Android/JVM and a Kotlin/Native dump conversion experiment.
-The common observation UI does not imply those analyzers already work on iOS.
+Add `mothlight-shark` to the Android/JVM host. It uses the released
+`com.squareup.leakcanary:shark:2.14` artifact from Maven Central; the portable
+watcher and UI do not depend on Shark.
+
+```kotlin
+// Android: uses app-private cacheDir and Debug.dumpHprofData.
+val analyzer = io.github.mothlight.shark.androidRetentionAnalyzer(context)
+val tool = retentionTool(watcher, analyzer = analyzer)
+
+// Desktop: requires a JDK (17+) with jcmd and HotSpot attach enabled.
+val analyzer = io.github.mothlight.shark.jvmRetentionAnalyzer(privateCacheDirectory)
+```
+
+The Analyze button takes a snapshot only after at least one object is classified
+as retained. No capture runs on tool open or during the watcher's periodic checks.
+The tool offers cancellation; closing the tool cancels its analysis coroutine.
+Heap capture itself can pause the VM and is not safely interruptible, so cancellation
+waits for the writer to finish before removing the file. `jcmd` is invoked directly,
+without a shell or reflective MXBean lookup. Paths with spaces or either kind of
+quote are supported; paths containing both kinds of quotes or line breaks are
+rejected before invoking the diagnostic command. The capturer can also be explicitly
+injected through `HeapDumpCapture`; it must stop all writers before returning or throwing.
+
+Reports show a GC-root category, ordered references/fields, the target class and a
+Shark path signature. Selecting a watched label shows its chain. Duplicate watches
+of one target receive the same path. A per-watcher session ID prevents another
+watcher with the same numeric IDs from contaminating the report. Weak/soft/phantom
+`Reference.referent` and Android finalizer `zombie` edges are excluded. No arbitrary
+object values, thread names, exception messages, dump paths or raw dump bytes are
+included in the report. Class/field names and host-provided labels remain diagnostic data.
+
+The common `RetentionAnalyzer` interface returns typed findings:
+
+- `STRONG_PATH`: a strong path exists in this snapshot. This explains retention;
+  the host still owns the decision that the object's lifetime should have ended.
+- `NOT_IN_DUMP`: no matching live watched target. It may have been collected or
+  its watch may have been cleared/evicted; this is not a new collection verdict.
+- `NO_STRONG_PATH`: the target exists, but the analyzer found no strong root path.
+  It is not presented as proof of collection.
+
+`RetentionAnalysisController` serializes requests. Clear, pause and close invalidate
+older results, including a result arriving after a clear. Capture/parse/size-limit/
+cleanup failures remain distinct; cancellation propagates to the caller. Observation
+counts continue independently and do not become historical report counts.
+
+Each run writes to a new restricted local folder and deletes its HPROF and folder
+in `finally`, including parse failures and cancellation. Raw dumps may contain all
+application data. They are never uploaded or exported by Mothlight. A default
+256 MiB limit is checked **after capture** and before parsing; it does not cap disk
+usage during capture. Abrupt process termination can leave temporary files in the
+host cache, so the host's cache-clearing policy remains relevant. A cleanup failure
+is explicitly reported. JVM capture/analysis is tested with real HotSpot dumps on
+Linux; Android is compiled/minified but still needs a device heap-dump smoke.
+Windows/macOS desktop capture is not yet runtime-verified.
+
+Only the watch-marker schema has stable names under R8. Host class/field names in
+an obfuscated dump stay obfuscated: automatic `mapping.txt` deobfuscation is not
+implemented. Consumer rules are bundled; see [minification](minification.md).
+
+Retained byte sizes, UI grouping by signature, Android lifecycle auto-watch hooks
+and native graph analysis remain future work. iOS still supports real weak-object
+observation and the same common report interface. No native analyzer is supplied:
+the [Kotlin/Native dump conversion experiment](leak-detection-design.md) must verify
+both the retained root path and a released control before claiming support, with
+Swift/Objective-C graph coverage documented separately.

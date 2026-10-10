@@ -10,3 +10,8 @@ Its existing copyright notices are retained in the wrapper scripts.
 
 Original source project license notice retained for attribution:
 Copyright 2021 JetBrains s.r.o. and Kotlin Programming Language contributors.
+
+The optional mothlight-shark module depends on Shark 2.14 from the LeakCanary
+project, Copyright Square, Inc., licensed under Apache License 2.0.
+https://github.com/square/leakcanary
+Shark is consumed as a Maven dependency; no upstream implementation is copied.

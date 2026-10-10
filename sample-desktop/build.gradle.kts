@@ -1,5 +1,6 @@
 plugins { id("com.google.devtools.ksp"); kotlin("jvm"); kotlin("plugin.compose"); id("org.jetbrains.compose") }
 dependencies {
+    implementation(project(":mothlight-shark"))
     implementation(project(":mothlight-room3"))
     implementation("androidx.sqlite:sqlite-bundled:2.7.0")
     ksp("androidx.room3:room3-compiler:3.0.0")

@@ -5,13 +5,14 @@ import java.lang.ref.WeakReference
 
 actual fun platformRetentionBackend(): RetentionBackend = object : RetentionBackend {
     override val support = RetentionSupport.MANAGED_HEAP
-    override fun reference(target: Any): WeakHandle = QueueHandle(target)
+    override fun reference(target: Any): WeakHandle = QueueHandle(target, WatchKey("unkeyed", 0))
+    override fun reference(target: Any, key: WatchKey): WeakHandle = QueueHandle(target, key)
     override fun requestCollection() { Runtime.getRuntime().gc() }
 }
 
-private class QueueHandle(target: Any) : WeakHandle {
+private class QueueHandle(target: Any, key: WatchKey) : WeakHandle {
     private val queue = ReferenceQueue<Any>()
-    private val reference = WeakReference(target, queue)
+    private val reference = HeapWatchReference(target, queue, key.sessionId, key.watchId)
     @Volatile private var collected = false
     override fun isAlive(): Boolean {
         // Read the queue, never Reference.get(): a temporary strong reference can perturb a GC check.
@@ -20,3 +21,11 @@ private class QueueHandle(target: Any) : WeakHandle {
         return !collected
     }
 }
+
+/** Stable heap-dump schema. The analyzer reads these fields in HPROF, never through reflection. */
+internal class HeapWatchReference(
+    target: Any,
+    queue: ReferenceQueue<Any>,
+    val sessionId: String,
+    val watchId: Long,
+) : WeakReference<Any>(target, queue)

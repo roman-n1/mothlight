@@ -19,6 +19,7 @@ import io.ktor.util.date.getTimeMillis
 class DemoSession {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     val retentionWatcher = RetentionWatcher(scope)
+    val retentionAnalyzer = io.github.mothlight.shark.jvmRetentionAnalyzer(java.io.File(System.getProperty("java.io.tmpdir")))
     private var heldObject: Any? = null
     fun retainObject(label: String, reason: String) {
         val target = ByteArray(1024)

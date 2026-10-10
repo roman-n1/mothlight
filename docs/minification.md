@@ -8,8 +8,10 @@ adapter uses `consumerProguardFiles`. This follows the
 [Android KMP publishing contract](https://developer.android.com/kotlin/multiplatform/plugin).
 
 The current Android code uses typed calls, without reflective Mothlight class
-lookup or JNI. The shared file is intentionally documented but has no keep
-directives. Keeping all `io.github.mothlight.**` classes or disabling obfuscation
+lookup or JNI. The shared file preserves only the `HeapWatchReference` class and
+its `sessionId`/`watchId` fields: these names form the serialized HPROF schema. The
+analyzer reads bytes from a dump, without inspecting live objects reflectively.
+The equivalent rule is included in the retention JVM JAR under `META-INF/proguard`. Keeping all `io.github.mothlight.**` classes or disabling obfuscation
 would hide issues and prevent useful shrinking. Compose, coroutines, Room,
 SQLite, Ktor, OkHttp and Retrofit provide their own consumer configuration;
 application models and custom reflective plugins remain the host's responsibility.
@@ -27,7 +29,10 @@ can provide a typed `MemorySource` implemented with its native bridge without
 changing the panel. Linux `/proc` and iOS Mach readers remain available.
 
 This rule covers code owned by Mothlight. It does not claim that every internal
-implementation of the JVM, Compose, coroutines, Retrofit or Room avoids reflection.
+implementation of the JVM, Compose, coroutines, Retrofit, Room or optional Shark
+dependency avoids reflection. Shark contains reflective diagnostic `toString()`
+helpers; Mothlight never calls or exposes those reports, and maps typed results
+into its own value-only model.
 The Retrofit/Room samples exercise the host APIs; Mothlight adapters observe the
 host-owned clients and databases and do not construct them reflectively.
 
@@ -38,11 +43,12 @@ Its only local Mothlight keep rule preserves the deliberately held demo-object
 field; that field is a sample leak root, not a library requirement.
 
 CI builds the minified release APK, checks that Mothlight classes were actually
-renamed, inspects all ten AARs for packaged consumer rules, and checks that the JVM JAR
+renamed, inspects all eleven AARs for packaged consumer rules, and checks that the JVM JAR
 contains no obsolete JNA binding/rules. `python3 scripts/check_shrinker.py --artifacts` performs
 those checks after the builds; without the flag it checks source wiring only.
 R8 configuration, mapping and the inspected Activity DEX disassembly are uploaded
-alongside test results. The guard checks the actual retained field and its writes
+alongside test results. The guard also inspects both stable marker fields and
+their constructor writes in the actual release DEX. It checks the retained demo field and its writes
 in the release DEX; unchanged field names may be absent from R8 mapping output.
 
 These checks prove packaging and successful shrinking; they do not establish

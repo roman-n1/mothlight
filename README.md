@@ -51,8 +51,9 @@ The lantern is your debug panel; the moths are the bugs coming into the light.
 Memory readings and retained-object observation are platform-dependent.
 **A retained object is a lead, not a confirmed leak.** Android/JVM and iOS can
 observe watched objects; iOS observation covers Kotlin objects, not the complete
-Swift/Objective-C graph. Heap paths and leak-cause analysis are not part of the
-current `main` version. See [retention](docs/retention.md),
+Swift/Objective-C graph. The optional Shark adapter captures Android/JVM heaps
+on demand and shows strong paths to watched objects. No iOS heap analyzer is
+supplied. See [retention](docs/retention.md),
 [memory](docs/memory.md) and [verification](docs/verification.md) for exact capabilities.
 
 ## Try it
@@ -195,7 +196,8 @@ redacted data; it is not an authenticated replay facility.
 | Module | Purpose | Needs Compose in your app? |
 | --- | --- | --- |
 | `mothlight-core` | Instance-owned recording, bounded feeds, HTTP model and redaction | No |
-| `mothlight-retention` | Bounded weak-object observation on Android/JVM and iOS | No |
+| `mothlight-retention` | Bounded weak-object observation on Android/JVM and iOS; common analysis contracts | No |
+| `mothlight-shark` | Optional Android/JVM heap capture and strong retention paths with Shark | No |
 | `mothlight-memory` | Platform memory readings and cancellable observation | No |
 | `mothlight-compose` | Material 3 panel and custom tool API | Yes |
 | `mothlight-ktor` | Passive Ktor client integration | No |
