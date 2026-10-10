@@ -1,46 +1,60 @@
 # Mothlight
 
+<p align="center">
+  <img src="assets/brand/mothlight.png" width="400" alt="Mothlight — Bring bugs to light. Five moths gathering around a glowing lantern.">
+</p>
+
 [![Verify](https://github.com/roman-n1/mothlight/actions/workflows/verify.yml/badge.svg)](https://github.com/roman-n1/mothlight/actions/workflows/verify.yml)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
-**See what your app is doing.**
+**Bring bugs to light.**
 
-An extensible, in-app developer panel for Kotlin Multiplatform and native Android.
-Inspect HTTP traffic, live database rows, SQL execution and realtime frames.
-Inspect startup milestones, lifecycle observations, navigation breadcrumbs and
-invariant counters. Show live memory usage over your app, collect logs and add
-tools owned by your app. Standard tools do not require Decompose or a DI framework.
+An extensible, in-app developer panel for **Kotlin Multiplatform and native Android**.
+Inspect network traffic, browse live database rows, follow realtime events and
+watch memory — inside the app you're debugging.
 
-> Early alpha. This repository contains the reusable foundation extracted from an
-> existing application. It does not include that application's authentication,
-> messaging, call stack, or product-specific tools. No Maven Central release yet.
+A request failed. A row changed, but the screen didn't. An object outlived its
+screen. Mothlight brings the evidence into view so you can follow what happened.
+The lantern is your debug panel; the moths are the bugs coming into the light.
 
-## What's inside
+[Try the demo](#try-it) · [Add to your app](#use-from-source) ·
+[Android + Retrofit](docs/android.md) · [Build a tool](#extend-it)
 
-| Module | Purpose | Needs Compose in your app? |
-| --- | --- | --- |
-| `mothlight-core` | Instance-owned recording, bounded feeds, HTTP model and redaction | No |
-| `mothlight-retention` | Bounded weak-object observation on Android/JVM and iOS; common analysis contracts | No |
-| `mothlight-shark` | Optional Android/JVM heap capture and strong retention paths with Shark | No |
-| `mothlight-memory` | Platform memory readings and cancellable observation | No |
-| `mothlight-compose` | Material 3 panel and custom tool API | Yes |
-| `mothlight-ktor` | Passive Ktor client integration | No |
-| `mothlight-okhttp` | OkHttp interceptor, also works with Retrofit | No |
-| `mothlight-sqlite` | SQLiteDriver tracing and read-only table source | No |
-| `mothlight-room` | Room 2 live database adapter (Android/JVM/iOS) | No |
-| `mothlight-room3` | Room 3 live database adapter (Android/JVM/iOS) | No |
-| `mothlight-android` | View factory for Activities and Fragments | No Compose source/compiler required |
-| `sample-desktop` | Interactive demo with synthetic Ktor responses and a custom tab | Demo |
-| `sample-android` | Native Android Views + Retrofit demo, synthetic responses | No |
+> **Early alpha · available from source.** No Maven Central release yet.
+> Mothlight extracts reusable debugging tools from a working application;
+> authentication, messaging, calls and product-specific tools stay with the host.
 
-English is the fallback language. Russian is selected automatically for a Russian
-application locale. Panel strings, hints and sample controls are localized.
-Application-supplied log messages, error categories and HTTP protocol values
-are data and are not translated.
+## What will you bring to light?
 
-The optional [memory overlay](docs/memory.md) has a panel switch, per-instance
-settings and Compose/native Android View integration. Add the optional
-[retained-object tool](docs/retention.md) for Android/JVM and iOS observation,
-a live badge, search and collection history.
+| Follow the question | Find the evidence |
+| --- | --- |
+| **What went over the wire?** | Inspect HTTP traffic through Ktor or OkHttp/Retrofit, with redacted headers and optional JSON capture. |
+| **What's really in the database?** | Browse live Room 2/3 table pages and trace SQLite execution. |
+| **What happened between updates?** | Inspect realtime frames reported by your transport hooks, alongside logs and diagnostic events. |
+| **How did the app get here?** | Record startup milestones, lifecycle transitions, navigation breadcrumbs and invariant counters through typed host hooks. |
+| **Where is memory going?** | Keep platform memory readings visible over the app and inspect objects that outlive their expected lifetime. |
+| **What does my app need to explain?** | Add your own tools and localized tabs through the panel's plugin API. |
+
+### Your app, your light switch
+
+- **Start with the tools you need.** Recording and adapters are separate modules;
+  the core has no Compose dependency. No Decompose or DI framework is required.
+- **Use it in native Android, too.** View factories fit Activities and Fragments;
+  the OkHttp adapter works with Retrofit. Your app needs no Compose source or compiler plugin.
+- **Keep control of capture.** Event recording starts disabled, buffers are bounded,
+  and each instance belongs to your app. No upload endpoint or telemetry service is included.
+- **Extend it with your own knowledge.** Connect your app's lifecycle and transports,
+  then add tools for the behavior only your app understands.
+- **Read it in English or Russian.** Library controls follow the app locale,
+  with English as the fallback.
+
+Memory readings and retained-object observation are platform-dependent.
+**A retained object is a lead, not a confirmed leak.** Android/JVM and iOS can
+observe watched objects; iOS observation covers Kotlin objects, not the complete
+Swift/Objective-C graph. The optional Shark adapter captures Android/JVM heaps
+on demand and shows strong paths to watched objects. No iOS heap analyzer is
+supplied. See [retention](docs/retention.md),
+[memory](docs/memory.md) and [verification](docs/verification.md) for exact capabilities.
 
 ## Try it
 
@@ -52,6 +66,10 @@ Android minimum SDK: 23.
 ./gradlew :sample-desktop:run
 ./gradlew :sample-android:assembleDebug
 ```
+
+Open the panel, inspect a synthetic request and explore the built-in tools.
+The retention demo deliberately holds an object: release it, then recheck its
+observation in the panel.
 
 The samples use mock transports. They do not contact a backend or require credentials.
 
@@ -173,6 +191,34 @@ may buffer a response before the stored body limit is applied. The OkHttp adapte
 uses a bounded peek and does not replay request bodies. A cURL export uses recorded,
 redacted data; it is not an authenticated replay facility.
 
+## What's inside
+
+| Module | Purpose | Needs Compose in your app? |
+| --- | --- | --- |
+| `mothlight-core` | Instance-owned recording, bounded feeds, HTTP model and redaction | No |
+| `mothlight-retention` | Bounded weak-object observation on Android/JVM and iOS; common analysis contracts | No |
+| `mothlight-shark` | Optional Android/JVM heap capture and strong retention paths with Shark | No |
+| `mothlight-memory` | Platform memory readings and cancellable observation | No |
+| `mothlight-compose` | Material 3 panel and custom tool API | Yes |
+| `mothlight-ktor` | Passive Ktor client integration | No |
+| `mothlight-okhttp` | OkHttp interceptor, also works with Retrofit | No |
+| `mothlight-sqlite` | SQLiteDriver tracing and read-only table source | No |
+| `mothlight-room` | Room 2 live database adapter (Android/JVM/iOS) | No |
+| `mothlight-room3` | Room 3 live database adapter (Android/JVM/iOS) | No |
+| `mothlight-android` | View factory for Activities and Fragments | No Compose source/compiler required |
+| `sample-desktop` | Interactive demo with synthetic Ktor responses and a custom tab | Demo |
+| `sample-android` | Native Android Views + Retrofit demo, synthetic responses | No |
+
+English is the fallback language. Russian is selected automatically for a Russian
+application locale. Panel strings, hints and sample controls are localized.
+Application-supplied log messages, error categories and HTTP protocol values
+are data and are not translated.
+
+The optional [memory overlay](docs/memory.md) has a panel switch, per-instance
+settings and Compose/native Android View integration. Add the optional
+[retained-object tool](docs/retention.md) for Android/JVM and iOS observation,
+a live badge, search and collection history.
+
 ## Development
 
 ```shell
@@ -182,6 +228,13 @@ python3 scripts/check_resources.py
 
 See [architecture and extraction](docs/architecture.md), [Android](docs/android.md)
 and [verification](docs/verification.md).
+
+## Help bring the next bug to light
+
+Try Mothlight in a development build. If an integration is missing, a tool is hard
+to read or a capture behaves unexpectedly, [open an issue](https://github.com/roman-n1/mothlight/issues).
+Include the platform, module and a small reproducible example with synthetic data.
+Ideas for new adapters and app-owned tools are welcome, too.
 
 ## License
 
