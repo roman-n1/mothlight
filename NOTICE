@@ -7,3 +7,6 @@ changes package names, lifecycle ownership, privacy policy, UI and build setup.
 
 The Gradle Wrapper is provided by the Gradle project under Apache License 2.0.
 Its existing copyright notices are retained in the wrapper scripts.
+
+Original source project license notice retained for attribution:
+Copyright 2021 JetBrains s.r.o. and Kotlin Programming Language contributors.

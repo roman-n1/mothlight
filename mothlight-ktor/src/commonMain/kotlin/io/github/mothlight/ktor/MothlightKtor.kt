@@ -44,10 +44,10 @@ fun HttpClientConfig<*>.installMothlight(inspector: NetworkInspector) {
     if (inspector.redactor.captureJsonBodies) {
         // The observer receives a separate body. Caller still receives the original response.
         install(ResponseObserver) {
-            filter { response ->
-                val type = response.headers["Content-Type"].orEmpty().substringBefore(';').trim()
+            filter { call ->
+                val type = call.response.headers["Content-Type"].orEmpty().substringBefore(';').trim()
                 inspector.enabled.value && (type == "application/json" || type.endsWith("+json")) &&
-                    response.call.request.attributes.contains(TransactionIdKey)
+                    call.request.attributes.contains(TransactionIdKey)
             }
             onResponse { response ->
                 val id = response.call.request.attributes.getOrNull(TransactionIdKey) ?: return@onResponse

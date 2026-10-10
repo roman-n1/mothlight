@@ -29,7 +29,9 @@ jobs:
         if: always()
         with:
           name: test-results
-          path: '**/build/reports/tests/'
+          path: |
+            **/build/reports/tests/
+            **/build/test-results/
   multiplatform:
     runs-on: macos-latest
     steps:
@@ -45,3 +47,10 @@ jobs:
       - run: sdkmanager 'platforms;android-37.0' 'build-tools;36.0.0'
       - uses: gradle/actions/setup-gradle@v4
       - run: ./gradlew :mothlight-core:iosSimulatorArm64Test :mothlight-compose:compileKotlinIosSimulatorArm64 :mothlight-ktor:compileKotlinIosSimulatorArm64 :mothlight-compose:compileKotlinJs :mothlight-compose:compileKotlinWasmJs :mothlight-ktor:compileKotlinJs :mothlight-ktor:compileKotlinWasmJs --continue
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: multiplatform-test-results
+          path: |
+            **/build/reports/tests/
+            **/build/test-results/
