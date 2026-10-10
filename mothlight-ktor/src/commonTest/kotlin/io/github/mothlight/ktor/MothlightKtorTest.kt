@@ -55,10 +55,17 @@ class MothlightKtorTest {
         inspector.setEnabled(true)
         val failure = IllegalStateException("private token")
         val client = HttpClient(MockEngine { throw failure }) { installMothlight(inspector) }
+        val referenceClient = HttpClient(MockEngine { throw failure })
         try {
+            val expected = assertFailsWith<IllegalStateException> { referenceClient.get("https://example.test") }
             val caught = assertFailsWith<IllegalStateException> { client.get("https://example.test") }
-            assertSame(failure, caught)
+            // Coroutine stack recovery may copy exceptions. Compare the observable client contract.
+            assertEquals(expected::class, caught::class)
+            assertEquals(expected.message, caught.message)
             assertEquals(Status.Failed("IllegalStateException"), inspector.transactions.value.single().status)
-        } finally { client.close() }
+        } finally {
+            client.close()
+            referenceClient.close()
+        }
     }
 }

@@ -1,5 +1,7 @@
 # Mothlight
 
+[![Verify](https://github.com/roman-n1/mothlight/actions/workflows/verify.yml/badge.svg)](https://github.com/roman-n1/mothlight/actions/workflows/verify.yml)
+
 **See what your app is doing.**
 
 An extensible, in-app developer panel for Kotlin Multiplatform and native Android.
