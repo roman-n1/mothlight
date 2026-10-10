@@ -5,3 +5,5 @@ include(":mothlight-core")
 include(":mothlight-compose", ":mothlight-ktor", ":sample-desktop")
 include(":mothlight-okhttp")
 include(":mothlight-android", ":sample-android")
+
+include(":mothlight-sqlite", ":mothlight-room", ":mothlight-room3")

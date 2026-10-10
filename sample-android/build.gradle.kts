@@ -1,4 +1,4 @@
-plugins { id("com.android.application") }
+plugins { id("com.google.devtools.ksp"); id("com.android.application") }
 android {
     namespace = "io.github.mothlight.sample.android"
     compileSdk = 37
@@ -18,6 +18,9 @@ android {
     }
 }
 dependencies {
+    implementation(project(":mothlight-room"))
+    implementation("androidx.sqlite:sqlite-bundled:2.7.0")
+    ksp("androidx.room:room-compiler:2.8.4")
     implementation(project(":mothlight-android"))
     implementation(project(":mothlight-okhttp"))
     implementation("androidx.activity:activity:1.13.0")

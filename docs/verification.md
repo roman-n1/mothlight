@@ -6,13 +6,15 @@ Its run history is the source of truth for the current commit's pass/fail status
 
 | Area | Automated check |
 | --- | --- |
-| Core | 13 JVM tests: gate, capacity, isolation, HTTP lifecycle, redaction, concurrency, cURL |
-| Compose | 3 JVM tests: mapper behavior, detail formatting, tool registration contracts |
+| Core | 16 JVM tests: gate, capacity, isolation, HTTP lifecycle, redaction, concurrency, cURL, live source cancellation, SQL statistics, realtime capture |
+| Compose | 5 JVM tests: mapper behavior, detail formatting, tool registration contracts, database paging, SQL/channel filters |
 | Ktor | 4 JVM tests through MockEngine: response preservation, masking, disabled capture, error transparency |
 | OkHttp / Retrofit | 5 JVM tests through real OkHttp/Retrofit pipelines with a terminal mock transport |
-| Desktop | Sample Kotlin/JVM compilation |
-| Android | Native Views + Retrofit sample debug APK and release APK with R8 enabled |
-| iOS | Core tests in the arm64 simulator; Compose and Ktor arm64 simulator compilation |
+| SQLite | Real bundled SQLite tests on JVM and iOS simulator: bounded/masked pages, identifier rejection, tracing, statement reuse and errors |
+| Room 2 / Room 3 | Real generated JVM databases: DAO writes invalidate and refresh the observed page |
+| Desktop | Room 3 sample Kotlin/JVM compilation |
+| Android | Native Views + Retrofit + Room 2 sample debug APK and release APK with R8 enabled |
+| iOS | Core and SQLite tests in the arm64 simulator; Compose, Ktor and both Room adapters compiled for the simulator |
 | Web | Compose and Ktor compilation for JS and Wasm, including core dependencies |
 | Localization | Complete English/Russian keys and matching formatting arguments |
 
@@ -31,6 +33,12 @@ can be consumed by a native Android project. The network module has no UI depend
 - Ktor error transparency compares type and message with an uninstrumented client.
   Reference identity is not part of the contract because coroutine stack recovery
   may copy the exception.
+
+- The first live-tool tests failed on a missing database subscription and empty SQL/realtime feeds.
+  [Live contract RED run](https://github.com/roman-n1/mothlight/actions/runs/38047718942).
+- Real SQLite tests (JVM and iOS) and both real Room JVM tests then failed on empty
+  table results and missing execution durations before the reader/wrapper implementation.
+  [Database adapter RED run](https://github.com/roman-n1/mothlight/actions/runs/38047942604).
 
 ## Limits
 

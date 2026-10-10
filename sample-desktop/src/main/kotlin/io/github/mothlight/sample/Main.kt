@@ -21,7 +21,7 @@ fun main() = application {
             val scope = rememberCoroutineScope()
             DisposableEffect(demo) { onDispose { demo.close() } }
             val tools = remember(demo) {
-                MothlightTools(defaultMothlightTools(demo.mothlight).entries + MothlightTool(
+                MothlightTools(defaultMothlightTools(demo.mothlight).entries + databaseTool(demo.databaseSource) + MothlightTool(
                     id = "example-plugin",
                     title = { stringResource(Res.string.custom_tool) },
                     content = { modifier ->
@@ -38,6 +38,7 @@ fun main() = application {
                 Text(stringResource(Res.string.tagline), color = MaterialTheme.colorScheme.onBackground)
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Button(onClick = { scope.launch { demo.request() } }) { Text(stringResource(Res.string.mock_request)) }
+                    OutlinedButton(onClick = { scope.launch { demo.addRowAndFrame() } }) { Text(stringResource(Res.string.add_row_frame)) }
                     OutlinedButton(onClick = demo::log) { Text(stringResource(Res.string.add_log)) }
                 }
                 MothlightPanel(demo.mothlight, Modifier.fillMaxWidth().weight(1f), tools)

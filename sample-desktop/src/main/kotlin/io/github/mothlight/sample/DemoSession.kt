@@ -1,6 +1,11 @@
 package io.github.mothlight.sample
 
 import io.github.mothlight.*
+import androidx.room3.Room
+import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import io.github.mothlight.room3.RoomDatabaseSource
+import io.github.mothlight.sqlite.TracingSQLiteDriver
+import kotlinx.coroutines.Dispatchers
 import io.github.mothlight.ktor.installMothlight
 import io.ktor.client.*
 import io.ktor.client.engine.mock.*
@@ -12,6 +17,10 @@ import io.ktor.util.date.getTimeMillis
 /** Synthetic data only. The mock engine makes no network connections. */
 class DemoSession {
     val mothlight = Mothlight(redactor = Redactor(captureJsonBodies = true))
+    private val database = Room.inMemoryDatabaseBuilder<DemoDatabase>()
+        .setDriver(TracingSQLiteDriver(BundledSQLiteDriver(), mothlight.sql, { mothlight.enabled.value }))
+        .setQueryCoroutineContext(Dispatchers.IO).build()
+    val databaseSource = RoomDatabaseSource(database)
     private var sequence = 0L
     private val client = HttpClient(MockEngine {
         respond("""{"message":"Hello from Mothlight","access_token":"demo-secret","items":[1,2,3]}""",
@@ -34,5 +43,11 @@ class DemoSession {
         sequence++
         mothlight.events.record(DiagnosticEvent("event-$sequence", getTimeMillis(), category, message))
     }
-    fun close() { client.close() }
+    suspend fun addRowAndFrame() {
+        val id = ++sequence
+        database.items().insert(DemoItem(id, "Demo item #$id", "demo-secret"))
+        mothlight.realtime.connection("demo", ConnectionState.CONNECTED, getTimeMillis())
+        mothlight.realtime.record("demo", FrameDirection.INCOMING, """{"item":$id,"token":"demo-secret"}""", getTimeMillis())
+    }
+    fun close() { client.close(); database.close() }
 }

@@ -8,8 +8,10 @@ class Mothlight(capacity: Int = 200, redactor: Redactor = Redactor()) {
     val enabled: StateFlow<Boolean> = network.enabled
     val logs = ProbeFeed<LogEntry>(capacity) { enabled.value }
     val events = ProbeFeed<DiagnosticEvent>(capacity) { enabled.value }
+    val sql = SqlTraceRecorder(capacity, enabled = { enabled.value })
+    val realtime = RealtimeInspector(capacity, redactor) { enabled.value }
     fun setEnabled(value: Boolean) { network.setEnabled(value) }
-    fun clear() { network.clear(); logs.clear(); events.clear() }
+    fun clear() { network.clear(); logs.clear(); events.clear(); sql.clear(); realtime.clear() }
 }
 
 enum class LogLevel { DEBUG, INFO, WARN, ERROR }

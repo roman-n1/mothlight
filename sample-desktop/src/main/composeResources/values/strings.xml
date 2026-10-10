@@ -5,4 +5,5 @@
     <string name="tagline">See what your app is doing. Synthetic data, no network requests.</string>
     <string name="mock_request">Mock HTTP request</string>
     <string name="add_log">Add log</string>
+    <string name="add_row_frame">Add row + frame</string>
 </resources>
