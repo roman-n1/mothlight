@@ -62,7 +62,7 @@ class MothlightKtorTest {
             // Coroutine stack recovery may copy exceptions. Compare the observable client contract.
             assertEquals(expected::class, caught::class)
             assertEquals(expected.message, caught.message)
-            assertEquals(Status.Failed("IllegalStateException"), inspector.transactions.value.single().status)
+            assertEquals(Status.Failed("TransportError"), inspector.transactions.value.single().status)
         } finally {
             client.close()
             referenceClient.close()

@@ -18,7 +18,6 @@ actual fun readMemorySnapshot(): MemorySnapshot {
 private fun processResidentBytes(): Long? = try {
     val os = System.getProperty("os.name").orEmpty().lowercase()
     when {
-        os.contains("windows") -> windowsWorkingSet()
         os.contains("linux") -> File("/proc/self/status").useLines { lines ->
             val line = lines.firstOrNull { it.startsWith("VmRSS:") }
             val kb = line?.removePrefix("VmRSS:")?.trim()?.removeSuffix("kB")?.trim()?.toLongOrNull()
@@ -27,8 +26,5 @@ private fun processResidentBytes(): Long? = try {
         else -> null
     }
 } catch (_: Exception) {
-    null
-} catch (_: LinkageError) {
-    // Optional native binding may be unavailable in a restricted JVM host.
     null
 }

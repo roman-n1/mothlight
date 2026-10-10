@@ -23,6 +23,8 @@ fun MemoryUsageOverlay(
     modifier: Modifier = Modifier,
     source: MemorySource = PlatformMemorySource,
     dispatcher: CoroutineDispatcher = Dispatchers.Default,
+    retentionWatcher: io.github.mothlight.retention.RetentionWatcher? = null,
+    onOpenRetention: (() -> Unit)? = null,
 ) {
     val enabled by mothlight.memoryOverlay.enabled.collectAsState()
     if (enabled == false) return
@@ -31,7 +33,10 @@ fun MemoryUsageOverlay(
     }
     val snapshot by readings.collectAsState(MemorySnapshot())
     val presentation = remember(snapshot) { memoryPresentation(snapshot) }
-    MemoryBadge(presentation, modifier)
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        MemoryBadge(presentation)
+        retentionWatcher?.let { RetentionBadge(it, onOpenRetention) }
+    }
 }
 
 @OptIn(ExperimentalLayoutApi::class)

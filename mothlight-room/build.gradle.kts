@@ -1,6 +1,13 @@
 plugins { id("com.android.kotlin.multiplatform.library"); kotlin("multiplatform"); `maven-publish`; id("com.google.devtools.ksp") }
 kotlin {
-    android { namespace = "io.github.mothlight.room"; compileSdk = 37; minSdk = 23 }
+    android {
+        optimization {
+            consumerKeepRules.apply {
+                publish = true
+                file(rootProject.file("consumer-rules.pro"))
+            }
+        }
+        namespace = "io.github.mothlight.room"; compileSdk = 37; minSdk = 23 }
     jvm { compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) }
     iosArm64()
     iosSimulatorArm64()

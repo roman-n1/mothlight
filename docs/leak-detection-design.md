@@ -1,7 +1,8 @@
 # Leak detection: research and proposed direction
 
-Research date: 2026-10-10. This is a design proposal, not a shipped leak detector.
-The memory overlay currently displays memory metrics only.
+Research date: 2026-10-10. [Portable observation, the retention tool and badge](retention.md)
+are implemented. Heap analysis and native dump conversion below remain proposals;
+a retained object is not a confirmed leak.
 
 ## What to reuse
 

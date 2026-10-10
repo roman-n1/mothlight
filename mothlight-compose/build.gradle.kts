@@ -1,6 +1,12 @@
 plugins { id("com.android.kotlin.multiplatform.library"); kotlin("multiplatform"); kotlin("plugin.compose"); id("org.jetbrains.compose"); `maven-publish` }
 kotlin {
     android {
+        optimization {
+            consumerKeepRules.apply {
+                publish = true
+                file(rootProject.file("consumer-rules.pro"))
+            }
+        }
         namespace = "io.github.mothlight.compose"
         compileSdk = 37
         minSdk = 23
@@ -16,6 +22,7 @@ kotlin {
         commonMain.dependencies {
             api(project(":mothlight-core"))
             api(project(":mothlight-memory"))
+            api(project(":mothlight-retention"))
             api("org.jetbrains.compose.runtime:runtime:1.11.1")
             api("org.jetbrains.compose.ui:ui:1.11.1")
             implementation("org.jetbrains.compose.foundation:foundation:1.11.1")

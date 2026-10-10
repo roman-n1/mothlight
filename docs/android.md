@@ -39,7 +39,7 @@ built against OkHttp 4.12; the sample and integration test use Retrofit 3.0.
 The caller receives its original response body. Request bodies are deliberately
 not read or serialized again, including one-shot and duplex uploads. Optional
 response capture uses a bounded `peekBody`. Transport errors propagate unchanged;
-only their class name enters the panel.
+only the stable `TransportError` category enters the panel.
 
 ## Activity or Fragment using Views
 
@@ -71,9 +71,11 @@ does not change the global application locale.
 ```
 
 The native sample has no Compose compiler plugin. Its release build enables R8.
-Mothlight has no reflection or JNI and declares no broad keep rules; Retrofit/OkHttp
+Mothlight uses typed calls and declares no broad keep rules; Retrofit/OkHttp
 supply their own consumer rules. The sample is for development and intentionally
 includes the panel in both variants to exercise shrinking. Production apps should
 keep debug wiring out of release variants.
 
 See [verification](verification.md) for build/device status.
+
+See [minification](minification.md) for the shared consumer rules and automated AAR/R8 verification.

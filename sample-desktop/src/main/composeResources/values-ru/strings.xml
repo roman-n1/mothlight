@@ -7,4 +7,8 @@
     <string name="add_log">Добавить лог</string>
     <string name="add_row_frame">Добавить строку + кадр</string>
     <string name="diagnostic_scenario">Заполнить диагностику</string>
+    <string name="retain_object">Удержать демообъект</string>
+    <string name="release_object">Освободить демообъект</string>
+    <string name="demo_object">Демообъект</string>
+    <string name="demo_reason">Время жизни демообъекта истекло; пример намеренно хранит ссылку</string>
 </resources>

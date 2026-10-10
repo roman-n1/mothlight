@@ -31,8 +31,8 @@ class MothlightInterceptor(private val inspector: NetworkInspector) : Intercepto
             )
             return response
         } catch (cause: IOException) {
-            // Exception messages can contain URLs or credentials; retain only the type.
-            inspector.recordFailure(id, cause.javaClass.simpleName, System.currentTimeMillis())
+            // Stable category: no credential-bearing message or reflective class name.
+            inspector.recordFailure(id, "TransportError", System.currentTimeMillis())
             throw cause
         }
     }

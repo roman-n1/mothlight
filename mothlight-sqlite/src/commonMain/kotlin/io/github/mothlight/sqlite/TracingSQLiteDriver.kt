@@ -41,7 +41,8 @@ private class TracingStatement(
     override fun step(): Boolean {
         stepped = true
         return try { delegate.step() } catch (error: Throwable) {
-            errorType = error::class.simpleName
+            // Stable across shrinking and platforms; the original exception still reaches the caller.
+            errorType = "SqlError"
             throw error
         }
     }

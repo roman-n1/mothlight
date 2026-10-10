@@ -19,6 +19,7 @@ tools owned by your app. Standard tools do not require Decompose or a DI framewo
 | Module | Purpose | Needs Compose in your app? |
 | --- | --- | --- |
 | `mothlight-core` | Instance-owned recording, bounded feeds, HTTP model and redaction | No |
+| `mothlight-retention` | Bounded weak-object observation on Android/JVM and iOS | No |
 | `mothlight-memory` | Platform memory readings and cancellable observation | No |
 | `mothlight-compose` | Material 3 panel and custom tool API | Yes |
 | `mothlight-ktor` | Passive Ktor client integration | No |
@@ -32,11 +33,13 @@ tools owned by your app. Standard tools do not require Decompose or a DI framewo
 
 English is the fallback language. Russian is selected automatically for a Russian
 application locale. Panel strings, hints and sample controls are localized.
-Application-supplied log messages, exception type names and HTTP protocol values
+Application-supplied log messages, error categories and HTTP protocol values
 are data and are not translated.
 
 The optional [memory overlay](docs/memory.md) has a panel switch, per-instance
-settings and Compose/native Android View integration.
+settings and Compose/native Android View integration. Add the optional
+[retained-object tool](docs/retention.md) for Android/JVM and iOS observation,
+a live badge, search and collection history.
 
 ## Try it
 
@@ -93,6 +96,8 @@ Imports: `io.github.mothlight.Mothlight`,
 
 **Native Android + Retrofit:** see [the Android guide](docs/android.md). Neither
 KMP nor Compose source code is required in a consuming Android app.
+Consumer rules are packaged automatically; see [minification](docs/minification.md)
+for Android R8 and Windows/JVM considerations.
 
 ## Database and realtime
 
