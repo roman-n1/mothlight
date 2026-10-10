@@ -8,7 +8,7 @@ import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-MODULES = ["core", "compose", "ktor", "memory", "retention", "room", "room3", "sqlite", "okhttp"]
+MODULES = ["core", "compose", "ktor", "memory", "retention", "shark", "room", "room3", "sqlite", "okhttp"]
 
 
 def check_sources():
