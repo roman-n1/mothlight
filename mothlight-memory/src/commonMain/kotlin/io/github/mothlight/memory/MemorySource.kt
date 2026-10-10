@@ -26,3 +26,10 @@ fun observeMemory(
     intervalMillis: Long = 1_000,
     dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ): Flow<MemorySnapshot> = flowOf(MemorySnapshot())
+
+/** Current process only; unsupported metrics stay null. */
+expect fun readMemorySnapshot(): MemorySnapshot
+
+object PlatformMemorySource : MemorySource {
+    override fun read(): MemorySnapshot = readMemorySnapshot()
+}
