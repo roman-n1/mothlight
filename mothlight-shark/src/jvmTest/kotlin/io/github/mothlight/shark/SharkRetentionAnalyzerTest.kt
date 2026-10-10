@@ -11,7 +11,7 @@ class SharkRetentionAnalyzerTest {
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         val watcher = RetentionWatcher(scope, graceMillis = 0)
         val other = RetentionWatcher(scope, graceMillis = 0)
-        val directory = Files.createTempDirectory("mothlight-analysis-test").toFile()
+        val directory = Files.createTempDirectory("mothlight analysis cache ").toFile()
         try {
             watcher.setEnabled(true); other.setEnabled(true)
             val retained = registerRoot(watcher)
