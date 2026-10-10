@@ -1,0 +1,41 @@
+name: Verify
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  jvm-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - run: sdkmanager 'platforms;android-37.0' 'build-tools;36.0.0'
+      - uses: gradle/actions/setup-gradle@v4
+      - run: python3 scripts/check_resources.py
+      - run: ./gradlew :mothlight-core:jvmTest :mothlight-compose:jvmTest :mothlight-ktor:jvmTest :mothlight-okhttp:jvmTest :sample-desktop:classes :sample-android:assembleDebug :sample-android:assembleRelease --continue
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: '**/build/reports/tests/'
+  multiplatform:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - run: sdkmanager 'platforms;android-37.0' 'build-tools;36.0.0'
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew :mothlight-core:iosSimulatorArm64Test :mothlight-compose:compileKotlinIosSimulatorArm64 :mothlight-ktor:compileKotlinIosSimulatorArm64 :mothlight-compose:compileKotlinJs :mothlight-compose:compileKotlinWasmJs :mothlight-ktor:compileKotlinJs :mothlight-ktor:compileKotlinWasmJs --continue

@@ -1,0 +1,8 @@
+<resources>
+    <string name="custom_tool">Мой плагин</string>
+    <string name="plugin_description">Эта вкладка принадлежит приложению. Mothlight не знает о её данных.</string>
+    <string name="emit_event">Записать событие</string>
+    <string name="tagline">Узнайте, что происходит внутри приложения. Демоданные — без сетевых запросов.</string>
+    <string name="mock_request">Тестовый HTTP-запрос</string>
+    <string name="add_log">Добавить лог</string>
+</resources>

@@ -1,0 +1,62 @@
+package io.github.mothlight.compose
+
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
+import io.github.mothlight.Mothlight
+import io.github.mothlight.compose.resources.*
+import org.jetbrains.compose.resources.stringResource
+
+/** Embeddable panel; visibility belongs to the host, recording belongs to [mothlight]. */
+@Composable
+fun MothlightPanel(
+    mothlight: Mothlight,
+    modifier: Modifier = Modifier,
+    tools: MothlightTools = remember(mothlight) { defaultMothlightTools(mothlight) },
+) {
+    var selectedId by remember(tools) { mutableStateOf(tools.entries.first().id) }
+    val enabled by mothlight.enabled.collectAsState()
+    Surface(modifier) {
+        Column(Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.fillMaxWidth()) {
+                Text("Mothlight", style = MaterialTheme.typography.titleLarge)
+                Row {
+                    TextButton(onClick = { mothlight.setEnabled(toggleRecording(enabled)) }) {
+                        Text(stringResource(recordingAction(enabled)))
+                    }
+                    TextButton(onClick = mothlight::clear) { Text(stringResource(Res.string.clear_all)) }
+                }
+            }
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                tools.entries.forEach { tool ->
+                    FilterChip(selected = selectedId == tool.id, onClick = { selectedId = tool.id }, label = { Text(tool.title()) })
+                }
+            }
+            HorizontalDivider()
+            key(selectedId) {
+                tools.entries.first { it.id == selectedId }.content(Modifier.fillMaxWidth().weight(1f))
+            }
+        }
+    }
+}
+
+private fun toggleRecording(current: Boolean): Boolean = !current
+private fun recordingAction(enabled: Boolean) = if (enabled) Res.string.pause else Res.string.record
+
+/** Use MaterialTheme in the host to customize colors and typography. */
+fun defaultMothlightTools(mothlight: Mothlight): MothlightTools = MothlightTools(listOf(
+    MothlightTool("http", { stringResource(Res.string.http) }) { NetworkContent(mothlight, it) },
+    MothlightTool("logs", { stringResource(Res.string.logs) }) { LogsContent(mothlight, it) },
+    MothlightTool("events", { stringResource(Res.string.events) }) { EventsContent(mothlight, it) },
+))
+
+@Preview
+@Composable
+private fun PanelPreview() {
+    MaterialTheme { MothlightPanel(remember { Mothlight() }, Modifier.size(720.dp, 480.dp)) }
+}

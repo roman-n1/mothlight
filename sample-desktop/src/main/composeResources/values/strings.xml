@@ -1,0 +1,8 @@
+<resources>
+    <string name="custom_tool">My plugin</string>
+    <string name="plugin_description">This tab belongs to the host. Mothlight knows nothing about its data.</string>
+    <string name="emit_event">Record event</string>
+    <string name="tagline">See what your app is doing. Synthetic data, no network requests.</string>
+    <string name="mock_request">Mock HTTP request</string>
+    <string name="add_log">Add log</string>
+</resources>

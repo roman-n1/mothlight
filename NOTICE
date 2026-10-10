@@ -1,0 +1,9 @@
+Mothlight
+Copyright 2026 Mothlight contributors.
+
+This project contains code extracted and adapted from an existing Debug panel
+with publication authorized by its maintainer, roman-n1. The initial extraction
+changes package names, lifecycle ownership, privacy policy, UI and build setup.
+
+The Gradle Wrapper is provided by the Gradle project under Apache License 2.0.
+Its existing copyright notices are retained in the wrapper scripts.

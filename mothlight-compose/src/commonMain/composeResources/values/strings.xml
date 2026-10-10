@@ -1,0 +1,18 @@
+<resources>
+    <string name="clear_all">Clear all</string>
+    <string name="pause">Pause recording</string>
+    <string name="record">Start recording</string>
+    <string name="http">HTTP</string>
+    <string name="logs">Logs</string>
+    <string name="events">Events</string>
+    <string name="search_http">Search method or URL</string>
+    <string name="select_request">Select a request to inspect its details</string>
+    <string name="request">Request</string>
+    <string name="response">Response</string>
+    <string name="curl">cURL command — select to copy</string>
+    <string name="feed_hint">Events appear while recording. Select text to copy.</string>
+    <string name="body_not_captured">Body not captured</string>
+    <string name="body_too_large">Body omitted: size limit exceeded</string>
+    <string name="body_not_json">Body omitted: not valid JSON</string>
+    <string name="duration_ms">%1$s ms</string>
+</resources>
