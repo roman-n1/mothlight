@@ -21,8 +21,10 @@ fun MothlightPanel(
     mothlight: Mothlight,
     modifier: Modifier = Modifier,
     tools: MothlightTools = remember(mothlight) { defaultMothlightTools(mothlight) },
+    state: MothlightPanelState = remember(tools) { MothlightPanelState() },
 ) {
-    var selectedId by remember(tools) { mutableStateOf(tools.entries.first().id) }
+    val requestedId by state.selectedTool.collectAsState()
+    val selectedId = resolveToolId(tools.entries.map { it.id }, requestedId)
     val enabled by mothlight.enabled.collectAsState()
     val memoryVisible by mothlight.memoryOverlay.enabled.collectAsState()
     val memoryLabel = stringResource(Res.string.show_memory_usage)
@@ -44,7 +46,7 @@ fun MothlightPanel(
             }
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 tools.entries.forEach { tool ->
-                    FilterChip(selected = selectedId == tool.id, onClick = { selectedId = tool.id }, label = { Text(tool.title()) })
+                    FilterChip(selected = selectedId == tool.id, onClick = { state.selectTool(tool.id) }, label = { Text(tool.title()) })
                 }
             }
             HorizontalDivider()

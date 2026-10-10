@@ -5,7 +5,8 @@ import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import io.github.mothlight.room3.RoomDatabaseSource
 import io.github.mothlight.sqlite.TracingSQLiteDriver
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
+import io.github.mothlight.retention.RetentionWatcher
 import io.github.mothlight.ktor.installMothlight
 import io.ktor.client.*
 import io.ktor.client.engine.mock.*
@@ -16,6 +17,15 @@ import io.ktor.util.date.getTimeMillis
 
 /** Synthetic data only. The mock engine makes no network connections. */
 class DemoSession {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    val retentionWatcher = RetentionWatcher(scope)
+    private var heldObject: Any? = null
+    fun retainObject(label: String, reason: String) {
+        val target = ByteArray(1024)
+        heldObject = target
+        retentionWatcher.expectReleased(target, label, reason)
+    }
+    fun releaseObject() { heldObject = null }
     val mothlight = Mothlight(redactor = Redactor(captureJsonBodies = true))
     private val database = Room.inMemoryDatabaseBuilder<DemoDatabase>()
         .setDriver(TracingSQLiteDriver(BundledSQLiteDriver(), mothlight.sql, { mothlight.enabled.value }))
@@ -28,6 +38,7 @@ class DemoSession {
     }) { installMothlight(mothlight.network) }
     init {
         mothlight.setEnabled(true)
+        retentionWatcher.setEnabled(true)
         event("startup", "Demo ready")
         log()
     }
@@ -49,5 +60,5 @@ class DemoSession {
         mothlight.realtime.connection("demo", ConnectionState.CONNECTED, getTimeMillis())
         mothlight.realtime.record("demo", FrameDirection.INCOMING, """{"item":$id,"token":"demo-secret"}""", getTimeMillis())
     }
-    fun close() { client.close(); database.close() }
+    fun close() { retentionWatcher.close(); heldObject = null; scope.cancel(); client.close(); database.close() }
 }

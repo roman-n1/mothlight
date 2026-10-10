@@ -21,9 +21,12 @@ fun main() = application {
         MaterialTheme(colorScheme = darkColorScheme(primary = Color(0xFFD9C4FF), secondary = Color(0xFFB6E4D0))) {
             val demo = remember { DemoSession() }
             val scope = rememberCoroutineScope()
+            val panelState = remember { MothlightPanelState() }
+            val objectLabel = stringResource(Res.string.demo_object)
+            val objectReason = stringResource(Res.string.demo_reason)
             DisposableEffect(demo) { onDispose { demo.close() } }
             val tools = remember(demo) {
-                MothlightTools(defaultMothlightTools(demo.mothlight).entries + databaseTool(demo.databaseSource) + MothlightTool(
+                MothlightTools(defaultMothlightTools(demo.mothlight).entries + databaseTool(demo.databaseSource) + retentionTool(demo.retentionWatcher) + MothlightTool(
                     id = "example-plugin",
                     title = { stringResource(Res.string.custom_tool) },
                     content = { modifier ->
@@ -42,10 +45,12 @@ fun main() = application {
                     Button(onClick = { scope.launch { demo.request() } }) { Text(stringResource(Res.string.mock_request)) }
                     OutlinedButton(onClick = { scope.launch { demo.addRowAndFrame() } }) { Text(stringResource(Res.string.add_row_frame)) }
                     OutlinedButton(onClick = { diagnosticScenario(demo.mothlight) }) { Text(stringResource(Res.string.diagnostic_scenario)) }
+                    OutlinedButton(onClick = { demo.retainObject(objectLabel, objectReason); panelState.selectTool("retention") }) { Text(stringResource(Res.string.retain_object)) }
+                    OutlinedButton(onClick = demo::releaseObject) { Text(stringResource(Res.string.release_object)) }
                     OutlinedButton(onClick = demo::log) { Text(stringResource(Res.string.add_log)) }
                 }
-                MemoryUsageOverlay(demo.mothlight)
-                MothlightPanel(demo.mothlight, Modifier.fillMaxWidth().weight(1f), tools)
+                MemoryUsageOverlay(demo.mothlight, retentionWatcher = demo.retentionWatcher, onOpenRetention = { panelState.selectTool("retention") })
+                MothlightPanel(demo.mothlight, Modifier.fillMaxWidth().weight(1f), tools, panelState)
             }
         }
     }

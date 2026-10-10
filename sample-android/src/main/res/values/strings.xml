@@ -1,3 +1,7 @@
 <resources><string name="mock_request">Mock Retrofit request</string>    <string name="add_row_frame">Add row + frame</string>
     <string name="diagnostic_scenario">Generate diagnostics</string>
+    <string name="retain_object">Hold demo object</string>
+    <string name="release_object">Release demo object</string>
+    <string name="demo_object">Demo object</string>
+    <string name="demo_reason">Demo lifetime ended; sample deliberately holds a reference</string>
 </resources>

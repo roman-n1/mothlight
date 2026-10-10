@@ -7,7 +7,8 @@ Its run history is the source of truth for the current commit's pass/fail status
 | Area | Automated check |
 | --- | --- |
 | Core | 24 JVM tests: gate, capacity, isolation, HTTP lifecycle, redaction, concurrency, cURL, live source cancellation, SQL statistics, realtime capture, typed diagnostics and concurrent writers |
-| Compose | 12 JVM tests: mapper behavior, detail formatting, tool registration contracts, database paging, SQL/channel filters, startup waterfall, lifecycle balance, invariant priority |
+| Compose | 15 JVM tests: retention filtering and panel selection, mapper behavior, detail formatting, tool registration contracts, database paging, SQL/channel filters, startup waterfall, lifecycle balance, invariant priority |
+| Retention | 8 common virtual-time/lifecycle tests, JVM concurrent writers and rooted weak reference, iOS real released-versus-rooted weak references |
 | Memory | Virtual-time start/stop/cancellation/recovery tests; live JVM heap and Linux/Windows process readings; iOS physical footprint test |
 | Ktor | 4 JVM tests through MockEngine: response preservation, masking, disabled capture, error transparency |
 | OkHttp / Retrofit | 5 JVM tests through real OkHttp/Retrofit pipelines with a terminal mock transport |
@@ -53,6 +54,10 @@ can be consumed by a native Android project. The network module has no UI depend
   of the inner sampling flow did not cancel the collector. The same acceptance
   test failed on JVM and iOS; observation now propagates source cancellation
   directly from the collecting coroutine without weakening that assertion.
+
+- Retention observation, native weak reachability and presentation first failed
+  against inert implementations on JVM, Windows and the iOS simulator.
+  [Retention RED run](https://github.com/roman-n1/mothlight/actions/runs/38053741244).
 
 ## Limits
 

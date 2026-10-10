@@ -75,8 +75,10 @@ Headless consumers may use the `mothlight-memory` module and collect
 `observeMemory(settings, source)` with their own scope. Each collector owns its
 polling; mount one overlay per host window to avoid duplicate reads.
 
-This extraction does not yet include forced GC, leak detection, heap dumps or
-long-press file export. See the [leak detection research and proposal](leak-detection-design.md)
+Pass an optional `retentionWatcher` and `onOpenRetention` callback to add a live
+[retained-object badge and tool](retention.md). The tool supports an explicit GC
+request; ordinary memory sampling never forces GC. Heap analysis, dumps and
+long-press file export remain future work. See the [analysis proposal](leak-detection-design.md)
 for the planned independent watcher and platform analysis adapters. The original application's own settings are unchanged.
 
 ## Platform dependencies

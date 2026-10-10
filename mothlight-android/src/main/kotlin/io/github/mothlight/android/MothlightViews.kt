@@ -14,10 +14,10 @@ import io.github.mothlight.compose.*
  * Dispose the composition with the host view lifecycle, including Fragment view recreation.
  */
 @JvmOverloads
-fun createMothlightView(context: Context, mothlight: Mothlight, tools: MothlightTools = defaultMothlightTools(mothlight)): ComposeView =
+fun createMothlightView(context: Context, mothlight: Mothlight, tools: MothlightTools = defaultMothlightTools(mothlight), state: MothlightPanelState = MothlightPanelState()): ComposeView =
     ComposeView(context).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-        setContent { MaterialTheme { MothlightPanel(mothlight, tools = tools) } }
+        setContent { MaterialTheme { MothlightPanel(mothlight, tools = tools, state = state) } }
     }
 
 /** Attach at the host boundary. Detaching this view stops memory sampling. */
@@ -26,7 +26,9 @@ fun createMemoryOverlayView(
     context: Context,
     mothlight: Mothlight,
     source: io.github.mothlight.memory.MemorySource = io.github.mothlight.memory.PlatformMemorySource,
+    retentionWatcher: io.github.mothlight.retention.RetentionWatcher? = null,
+    onOpenRetention: (() -> Unit)? = null,
 ): ComposeView = ComposeView(context).apply {
     setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindowOrReleasedFromPool)
-    setContent { MaterialTheme { MemoryUsageOverlay(mothlight, source = source) } }
+    setContent { MaterialTheme { MemoryUsageOverlay(mothlight, source = source, retentionWatcher = retentionWatcher, onOpenRetention = onOpenRetention) } }
 }

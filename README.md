@@ -19,6 +19,7 @@ tools owned by your app. Standard tools do not require Decompose or a DI framewo
 | Module | Purpose | Needs Compose in your app? |
 | --- | --- | --- |
 | `mothlight-core` | Instance-owned recording, bounded feeds, HTTP model and redaction | No |
+| `mothlight-retention` | Bounded weak-object observation on Android/JVM and iOS | No |
 | `mothlight-memory` | Platform memory readings and cancellable observation | No |
 | `mothlight-compose` | Material 3 panel and custom tool API | Yes |
 | `mothlight-ktor` | Passive Ktor client integration | No |
