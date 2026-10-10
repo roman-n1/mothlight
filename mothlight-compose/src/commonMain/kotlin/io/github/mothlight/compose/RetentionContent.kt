@@ -26,40 +26,42 @@ private fun RetentionContent(watcher: RetentionWatcher, modifier: Modifier) {
     var query by remember { mutableStateOf("") }
     var filter by remember { mutableStateOf(RetentionFilter.ALL) }
     val rows = remember(snapshot, query, filter) { retentionRows(snapshot, query, filter) }
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(supportLabel(snapshot.support)), style = MaterialTheme.typography.bodySmall)
-        Text(stringResource(Res.string.retention_hint), style = MaterialTheme.typography.bodySmall)
-        Text(stringResource(Res.string.retention_count, snapshot.retainedCount))
-        Text(stringResource(modeLabel(snapshot.mode)))
-        Text(stringResource(checkLabel(snapshot.lastCheck)), style = MaterialTheme.typography.bodySmall)
-        Text(stringResource(Res.string.retention_evicted, snapshot.evictedCount), style = MaterialTheme.typography.bodySmall)
-        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TextButton(onClick = { watcher.setEnabled(snapshot.mode == WatcherMode.DISABLED) }, enabled = canToggle(snapshot.mode)) {
-                Text(stringResource(toggleLabel(snapshot.mode)))
-            }
-            TextButton(onClick = watcher::clear) { Text(stringResource(Res.string.clear_all)) }
-            TextButton(onClick = { scope.launch { watcher.checkNow() } }, enabled = snapshot.mode == WatcherMode.RUNNING) {
-                Text(stringResource(Res.string.retention_recheck))
-            }
-            TextButton(onClick = { scope.launch { watcher.checkNow(requestCollection = true) } }, enabled = snapshot.mode == WatcherMode.RUNNING) {
-                Text(stringResource(Res.string.retention_gc))
-            }
-        }
-        OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(Res.string.retention_search)) }, singleLine = true)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            RetentionFilter.entries.forEach { choice ->
-                FilterChip(selected = filter == choice, onClick = { filter = choice }, label = { Text(stringResource(filterLabel(choice))) })
-            }
-        }
-        if (rows.isEmpty()) Text(stringResource(Res.string.retention_empty))
-        LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(rows, key = { it.id }) { row ->
-                Card(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(row.label, style = MaterialTheme.typography.titleSmall)
-                        Text(row.reason, style = MaterialTheme.typography.bodySmall)
-                        Text(stringResource(Res.string.retention_row, stringResource(stateLabel(row.state)), row.seconds))
+    LazyColumn(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        item(key = "controls") {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(supportLabel(snapshot.support)), style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(Res.string.retention_hint), style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(Res.string.retention_count, snapshot.retainedCount))
+                Text(stringResource(modeLabel(snapshot.mode)))
+                Text(stringResource(checkLabel(snapshot.lastCheck)), style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(Res.string.retention_evicted, snapshot.evictedCount), style = MaterialTheme.typography.bodySmall)
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(onClick = { watcher.setEnabled(snapshot.mode == WatcherMode.DISABLED) }, enabled = canToggle(snapshot.mode)) {
+                        Text(stringResource(toggleLabel(snapshot.mode)))
                     }
+                    TextButton(onClick = watcher::clear) { Text(stringResource(Res.string.clear_all)) }
+                    TextButton(onClick = { scope.launch { watcher.checkNow() } }, enabled = snapshot.mode == WatcherMode.RUNNING) {
+                        Text(stringResource(Res.string.retention_recheck))
+                    }
+                    TextButton(onClick = { scope.launch { watcher.checkNow(requestCollection = true) } }, enabled = snapshot.mode == WatcherMode.RUNNING) {
+                        Text(stringResource(Res.string.retention_gc))
+                    }
+                }
+                OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(Res.string.retention_search)) }, singleLine = true)
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    RetentionFilter.entries.forEach { choice ->
+                        FilterChip(selected = filter == choice, onClick = { filter = choice }, label = { Text(stringResource(filterLabel(choice))) })
+                    }
+                }
+                if (rows.isEmpty()) Text(stringResource(Res.string.retention_empty))
+            }
+        }
+        items(rows, key = { it.id }) { row ->
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(row.label, style = MaterialTheme.typography.titleSmall)
+                    Text(row.reason, style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(Res.string.retention_row, stringResource(stateLabel(row.state)), row.seconds))
                 }
             }
         }

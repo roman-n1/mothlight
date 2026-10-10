@@ -82,6 +82,21 @@ data and are not translated.
 - `snapshots` is a cold projection of current state; `snapshot` provides the latest
   value without a UI collector. The watcher itself runs in the supplied host scope.
 
+For a native Android host (no Compose functions needed):
+
+```kotlin
+val panelState = MothlightPanelState()
+val tools = MothlightTools(defaultMothlightTools(mothlight).entries + retentionTool(watcher))
+val panel = createMothlightView(context, mothlight, tools, panelState)
+val badge = createMemoryOverlayView(context, mothlight,
+    retentionWatcher = watcher,
+    onOpenRetention = { panelState.selectTool("retention") },
+)
+```
+
+Factories are in `io.github.mothlight.android`; tool/state APIs are in
+`io.github.mothlight.compose`. Attach these views to a lifecycle-owned layout.
+
 The samples deliberately hold a small synthetic object until the user presses
 Release. Use the recheck action afterward; there is no application/user data in
 this demonstration. Remove the watcher with its host scope.

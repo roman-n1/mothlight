@@ -21,8 +21,8 @@ to build Mothlight.
 | DI graph, singleton identity diagnostics | Host plugin | Concrete DI instrumentation stays in the host |
 | Network latency/error simulation | Not yet extracted | Explicit opt-in adapter and deterministic rule tests |
 | Flight recorder and timeline export | Not yet extracted | Bounded unified capture, redacted export format |
-| Memory usage setting and overlay | Live heap/native/process metrics; Compose and Android Views | Host-owned persistence; no heap dumps or leak detector |
-| Retained objects / leak indicator | [Research and proposed adapters](leak-detection-design.md); not implemented | Portable watcher, live count and optional Shark/native analysis |
+| Memory usage setting and overlay | Live heap/native/process metrics; Compose and Android Views | Host-owned persistence; heap dumps remain separate |
+| Retained objects / leak indicator | [Portable watcher, tool and live badge](retention.md) available on Android/JVM/iOS | Optional Shark/native heap analysis; no confirmed leak verdict yet |
 | UI switches, crash triggers | Host plugin | Actions remain explicitly owned by the application |
 | Sessions, quick login, outbox, message seeder, call tools | Host plugin | Keep product models and actions outside the library |
 

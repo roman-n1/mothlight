@@ -37,7 +37,9 @@ Application-supplied log messages, exception type names and HTTP protocol values
 are data and are not translated.
 
 The optional [memory overlay](docs/memory.md) has a panel switch, per-instance
-settings and Compose/native Android View integration.
+settings and Compose/native Android View integration. Add the optional
+[retained-object tool](docs/retention.md) for Android/JVM and iOS observation,
+a live badge, search and collection history.
 
 ## Try it
 
