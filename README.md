@@ -5,7 +5,8 @@
 **See what your app is doing.**
 
 An extensible, in-app developer panel for Kotlin Multiplatform and native Android.
-Inspect HTTP traffic, collect logs and diagnostics, and add tools owned by your app.
+Inspect HTTP traffic, live database rows, SQL execution and realtime frames.
+Collect logs and diagnostics, and add tools owned by your app.
 
 > Early alpha. This repository contains the reusable foundation extracted from an
 > existing application. It does not include that application's authentication,
@@ -19,6 +20,9 @@ Inspect HTTP traffic, collect logs and diagnostics, and add tools owned by your 
 | `mothlight-compose` | Material 3 panel and custom tool API | Yes |
 | `mothlight-ktor` | Passive Ktor client integration | No |
 | `mothlight-okhttp` | OkHttp interceptor, also works with Retrofit | No |
+| `mothlight-sqlite` | SQLiteDriver tracing and read-only table source | No |
+| `mothlight-room` | Room 2 live database adapter (Android/JVM/iOS) | No |
+| `mothlight-room3` | Room 3 live database adapter (Android/JVM/iOS) | No |
 | `mothlight-android` | View factory for Activities and Fragments | No Compose source/compiler required |
 | `sample-desktop` | Interactive demo with synthetic Ktor responses and a custom tab | Demo |
 | `sample-android` | Native Android Views + Retrofit demo, synthetic responses | No |
@@ -83,6 +87,16 @@ Imports: `io.github.mothlight.Mothlight`,
 
 **Native Android + Retrofit:** see [the Android guide](docs/android.md). Neither
 KMP nor Compose source code is required in a consuming Android app.
+
+## Database and realtime
+
+The default panel includes SQL and realtime tools. Attach a Room database with
+`databaseTool(RoomDatabaseSource(database))` to browse live table pages. See the
+[database and realtime guide](docs/database-and-realtime.md) for Room 2/3, SQLite
+tracing, native Android and transport hooks.
+
+The [extraction inventory](docs/extraction-roadmap.md) tracks other tools from the
+original panel and distinguishes shipped capabilities from remaining work.
 
 ## Extend it
 

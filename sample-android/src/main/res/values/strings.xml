@@ -1,1 +1,2 @@
-<resources><string name="mock_request">Mock Retrofit request</string></resources>
+<resources><string name="mock_request">Mock Retrofit request</string>    <string name="add_row_frame">Add row + frame</string>
+</resources>

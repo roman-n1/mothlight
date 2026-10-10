@@ -80,7 +80,7 @@ private fun FeedContent(rows: List<FeedRow>, modifier: Modifier) {
 }
 
 @Composable
-private fun localizedBody(body: String?): String = when (body) {
+internal fun localizedBody(body: String?): String = when (body) {
     null -> stringResource(Res.string.body_not_captured)
     "[body omitted: size limit]" -> stringResource(Res.string.body_too_large)
     "[body omitted: not JSON]" -> stringResource(Res.string.body_not_json)

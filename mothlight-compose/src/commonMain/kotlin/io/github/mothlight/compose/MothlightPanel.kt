@@ -51,6 +51,8 @@ private fun recordingAction(enabled: Boolean) = if (enabled) Res.string.pause el
 /** Use MaterialTheme in the host to customize colors and typography. */
 fun defaultMothlightTools(mothlight: Mothlight): MothlightTools = MothlightTools(listOf(
     MothlightTool("http", { stringResource(Res.string.http) }) { NetworkContent(mothlight, it) },
+    MothlightTool("sql", { stringResource(Res.string.sql) }) { SqlContent(mothlight, it) },
+    MothlightTool("realtime", { stringResource(Res.string.realtime) }) { RealtimeContent(mothlight, it) },
     MothlightTool("logs", { stringResource(Res.string.logs) }) { LogsContent(mothlight, it) },
     MothlightTool("events", { stringResource(Res.string.events) }) { EventsContent(mothlight, it) },
 ))
