@@ -1,6 +1,9 @@
 """Validate consumer-rule wiring and, in CI, packaged artifacts plus real R8 output."""
 from pathlib import Path
 import re
+import os
+import shutil
+import subprocess
 import sys
 import zipfile
 
@@ -60,7 +63,20 @@ def check_artifacts():
     mapping = (output / "mapping.txt").read_text()
     renamed = [(a, b) for a, b in re.findall(r"(?m)^(io\.github\.mothlight\.[^ ]+) -> ([^:]+):$", mapping) if a != b]
     assert renamed, "No Mothlight classes were actually obfuscated"
-    assert "java.lang.Object heldObject -> heldObject" in mapping, "Demo root was removed or renamed"
+    # R8 may omit identity member mappings. Inspect the output DEX, not that omission.
+    seeds = (output / "seeds.txt").read_text()
+    assert "io.github.mothlight.sample.android.MainActivity: java.lang.Object heldObject" in seeds, "Demo keep rule did not match"
+    apks = list((ROOT / "sample-android/build/outputs/apk/release").glob("*.apk"))
+    assert len(apks) == 1, "Expected one release APK to inspect"
+    analyzer = shutil.which("apkanalyzer")
+    if analyzer is None:
+        sdk = Path(os.environ["ANDROID_HOME"])
+        analyzer = str(sdk / "cmdline-tools/latest/bin/apkanalyzer")
+    smali = subprocess.run([analyzer, "dex", "code", "--class", "io.github.mothlight.sample.android.MainActivity", str(apks[0])],
+                           check=True, capture_output=True, text=True).stdout
+    (output / "retention-root.smali").write_text(smali)
+    assert re.search(r"(?m)^\.field[^\n]*\bheldObject:Ljava/lang/Object;", smali), "Demo root field absent from release DEX"
+    assert re.search(r"iput-object[^\n]*->heldObject:Ljava/lang/Object;", smali), "Release DEX never stores the demo root"
     print(f"Packaged consumer rules OK; R8 renamed {len(renamed)} Mothlight classes and preserved the deliberate demo root")
 
 

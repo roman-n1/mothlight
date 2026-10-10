@@ -41,7 +41,9 @@ CI builds the minified release APK, checks that Mothlight classes were actually
 renamed, inspects all ten AARs for packaged consumer rules, and checks that the JVM JAR
 contains no obsolete JNA binding/rules. `python3 scripts/check_shrinker.py --artifacts` performs
 those checks after the builds; without the flag it checks source wiring only.
-R8 configuration and mapping are uploaded alongside test results.
+R8 configuration, mapping and the inspected Activity DEX disassembly are uploaded
+alongside test results. The guard checks the actual retained field and its writes
+in the release DEX; unchanged field names may be absent from R8 mapping output.
 
 These checks prove packaging and successful shrinking; they do not establish
 runtime correctness on every device or for arbitrary host plugins. Android
