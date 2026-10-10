@@ -49,6 +49,10 @@ can be consumed by a native Android project. The network module has no UI depend
 - Memory settings, polling lifecycle, platform readings and presentation first
   failed against inert implementations (9 JVM failures).
   [Memory RED run](https://github.com/roman-n1/mothlight/actions/runs/38052246436).
+- The first memory implementation exposed a cancellation-boundary error: cancellation
+  of the inner sampling flow did not cancel the collector. The same acceptance
+  test failed on JVM and iOS; observation now propagates source cancellation
+  directly from the collecting coroutine without weakening that assertion.
 
 ## Limits
 

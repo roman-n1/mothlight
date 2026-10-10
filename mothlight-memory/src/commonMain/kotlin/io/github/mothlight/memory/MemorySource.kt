@@ -18,7 +18,6 @@ enum class ProcessMemoryKind { RESIDENT, PHYSICAL_FOOTPRINT }
 fun interface MemorySource { fun read(): MemorySnapshot }
 
 /** Cold observation: no scope, retained history, global hooks or work before collection. */
-@OptIn(ExperimentalCoroutinesApi::class)
 fun observeMemory(
     settings: MemoryOverlaySettings,
     source: MemorySource,
@@ -26,21 +25,24 @@ fun observeMemory(
     dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ): Flow<MemorySnapshot> {
     require(intervalMillis > 0) { "Memory sampling interval must be positive" }
-    return settings.enabled.flatMapLatest { enabled ->
-        if (!enabled) flowOf(MemorySnapshot()) else flow {
-            while (currentCoroutineContext().isActive) {
-                val snapshot = try {
-                    source.read()
-                } catch (cancelled: CancellationException) {
-                    throw cancelled
-                } catch (_: Exception) {
-                    MemorySnapshot()
-                }
-                emit(snapshot)
-                delay(intervalMillis)
+    return flow {
+        while (currentCoroutineContext().isActive) {
+            if (!settings.enabled.value) {
+                emit(MemorySnapshot())
+                settings.enabled.first { it }
             }
-        }.flowOn(dispatcher)
-    }.buffer(0)
+            val snapshot = try {
+                withContext(dispatcher) { source.read() }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                MemorySnapshot()
+            }
+            // A read may finish after the user disables the overlay. Do not publish stale data.
+            if (settings.enabled.value) emit(snapshot)
+            withTimeoutOrNull(intervalMillis) { settings.enabled.first { !it } }
+        }
+    }
 }
 
 /** Current process only; unsupported metrics stay null. */
