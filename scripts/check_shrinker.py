@@ -24,7 +24,10 @@ def check_no_reflection():
                 r"ServiceLoader\.load", r"MethodHandles\.lookup"]
     violations = []
     for module in ROOT.glob("mothlight-*"):
-        for source in module.glob("src/*Main/**/*.kt"):
+        sources = list(module.glob("src/*Main/**/*")) + list(module.glob("src/main/**/*"))
+        for source in sources:
+            if source.suffix not in (".kt", ".java"):
+                continue
             text = re.sub(r"(?m)//.*$", "", source.read_text())
             if any(re.search(pattern, text) for pattern in patterns):
                 violations.append(str(source.relative_to(ROOT)))
@@ -33,7 +36,6 @@ def check_no_reflection():
             violations.append(str(build.relative_to(ROOT)))
     assert not violations, "Reflection returned to library code: " + ", ".join(violations)
     print("Mothlight production sources: no reflective lookup or direct reflection dependency")
-
 
 
 def check_artifacts():

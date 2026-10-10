@@ -6,7 +6,8 @@ kotlin {
                 publish = true
                 file(rootProject.file("consumer-rules.pro"))
             }
-        } namespace = "io.github.mothlight.room"; compileSdk = 37; minSdk = 23 }
+        }
+        namespace = "io.github.mothlight.room"; compileSdk = 37; minSdk = 23 }
     jvm { compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) }
     iosArm64()
     iosSimulatorArm64()
