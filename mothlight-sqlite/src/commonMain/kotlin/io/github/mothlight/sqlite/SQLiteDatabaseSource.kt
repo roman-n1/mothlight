@@ -11,4 +11,4 @@ class SQLiteDatabaseSource(private val executor: SqlReadExecutor, private val in
     override suspend fun page(table: String, limit: Int, offset: Int) = DatabasePage(table, emptyList(), emptyList(), 0, offset, limit)
     override fun changes() = invalidations()
 }
-suspend fun readResult(statement: SQLiteStatement, maxRows: Int, step: suspend () -> Boolean): SqlResult = SqlResult(emptyList(), emptyList())
+inline fun readResult(statement: SQLiteStatement, maxRows: Int, step: () -> Boolean): SqlResult = SqlResult(emptyList(), emptyList())
