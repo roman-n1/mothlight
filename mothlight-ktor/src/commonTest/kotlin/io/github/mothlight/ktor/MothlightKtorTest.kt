@@ -23,11 +23,11 @@ class MothlightKtorTest {
             }.bodyAsText())
             advanceUntilIdle()
             val tx = inspector.transactions.value.single()
-            assertEquals(Status.Completed, tx.status)
-            assertEquals(200, tx.responseCode)
+            assertIs<Status.Completed>(tx.status)
+            assertEquals(200, assertIs<Status.Completed>(tx.status).code)
             assertEquals("https://example.test/data", tx.url)
             assertEquals("***", tx.requestHeaders.entries.first { it.key.equals("Authorization", true) }.value)
-            assertEquals("""{"access_token":"***","items":[1,2]}""", tx.responseBody)
+            assertEquals(CapturedBody.Text("""{"access_token":"***","items":[1,2]}"""), tx.responseBody)
         } finally { client.close() }
     }
     @Test fun disabledPluginPreservesResponseAndRecordsNothing() = runTest {
@@ -46,8 +46,8 @@ class MothlightKtorTest {
         try {
             assertEquals("private", client.get("https://example.test").bodyAsText())
             val tx = inspector.transactions.value.single()
-            assertEquals(201, tx.responseCode)
-            assertNull(tx.responseBody)
+            assertEquals(201, assertIs<Status.Completed>(tx.status).code)
+            assertEquals(CapturedBody.NotCaptured, tx.responseBody)
         } finally { client.close() }
     }
     @Test fun transportFailureIsRethrownWithoutPublishingExceptionMessage() = runTest {
@@ -62,7 +62,7 @@ class MothlightKtorTest {
             // Coroutine stack recovery may copy exceptions. Compare the observable client contract.
             assertEquals(expected::class, caught::class)
             assertEquals(expected.message, caught.message)
-            assertEquals(Status.Failed("TransportError"), inspector.transactions.value.single().status)
+            assertEquals("TransportError", assertIs<Status.Failed>(inspector.transactions.value.single().status).error)
         } finally {
             client.close()
             referenceClient.close()

@@ -1,6 +1,7 @@
 package io.github.mothlight.ktor
 
 import io.github.mothlight.NetworkInspector
+import io.github.mothlight.CapturedBody
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.api.Send
 import io.ktor.client.plugins.api.createClientPlugin
@@ -24,7 +25,7 @@ fun HttpClientConfig<*>.installMothlight(inspector: NetworkInspector) {
                 method = request.method.value,
                 url = request.url.buildString(),
                 headers = request.headers.entries().associate { (name, values) -> name to values.joinToString(", ") },
-                body = if (inspector.redactor.captureJsonBodies) extractBody(request) else null,
+                body = if (inspector.redactor.captureJsonBodies) extractBody(request) else CapturedBody.NotCaptured,
                 now = getTimeMillis(),
             )
             request.attributes.put(TransactionIdKey, id)
@@ -32,7 +33,7 @@ fun HttpClientConfig<*>.installMothlight(inspector: NetworkInspector) {
                 val call = proceed(request)
                 inspector.recordSuccess(id, call.response.status.value,
                     call.response.headers.entries().associate { (name, values) -> name to values.joinToString(", ") },
-                    null, getTimeMillis())
+                    CapturedBody.NotCaptured, getTimeMillis())
                 call
             } catch (cause: Throwable) {
                 // Stable category: no credential-bearing message or reflective class name.
@@ -60,7 +61,7 @@ fun HttpClientConfig<*>.installMothlight(inspector: NetworkInspector) {
     }
 }
 private val TransactionIdKey = AttributeKey<String>("Mothlight.transactionId")
-private fun extractBody(request: HttpRequestBuilder): String? = when (val body = request.body) {
-    is OutgoingContent.ByteArrayContent -> body.bytes().decodeToString()
-    else -> null
+private fun extractBody(request: HttpRequestBuilder): CapturedBody = when (val body = request.body) {
+    is OutgoingContent.ByteArrayContent -> CapturedBody.Text(body.bytes().decodeToString())
+    else -> CapturedBody.NotCaptured
 }

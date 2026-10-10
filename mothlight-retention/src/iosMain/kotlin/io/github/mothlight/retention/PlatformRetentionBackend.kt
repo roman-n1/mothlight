@@ -10,7 +10,7 @@ actual fun platformRetentionBackend(): RetentionBackend = object : RetentionBack
     override val support = RetentionSupport.KOTLIN_NATIVE
     override fun reference(target: Any): WeakHandle {
         val weak = WeakReference(target)
-        return WeakHandle { weak.get() != null }
+        return WeakHandle { weak.get() is Any }
     }
     override fun requestCollection() { GC.collect() }
 }

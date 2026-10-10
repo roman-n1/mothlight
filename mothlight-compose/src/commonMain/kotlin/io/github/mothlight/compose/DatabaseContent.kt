@@ -34,7 +34,7 @@ private sealed interface PageState {
 @Composable
 private fun DatabaseContent(source: DatabaseSource, modifier: Modifier) {
     val browser = remember(source) { DatabaseBrowser(source) }
-    var selected by remember(source) { mutableStateOf<String?>(null) }
+    var selected by remember(source) { mutableStateOf<TableSelection>(TableSelection.Prompt) }
     var offset by remember(source, selected) { mutableStateOf(0) }
     val tables by produceState<TablesState>(TablesState.Loading, browser) {
         browser.tables().catch { value = TablesState.Failed }.collect { value = TablesState.Ready(it) }
@@ -47,13 +47,13 @@ private fun DatabaseContent(source: DatabaseSource, modifier: Modifier) {
             is TablesState.Ready -> {
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     state.names.forEach { name ->
-                        FilterChip(selected = selected == name, onClick = { selected = name }, label = { Text(name) })
+                        FilterChip(selected = selected == TableSelection.Chosen(name), onClick = { selected = TableSelection.Chosen(name) }, label = { Text(name) })
                     }
                 }
                 val table = selected
                 when (table) {
-                    null -> Text(stringResource(Res.string.select_table))
-                    else -> DatabasePageContent(browser, table, offset, { offset = it }, Modifier.weight(1f))
+                    TableSelection.Prompt -> Text(stringResource(Res.string.select_table))
+                    is TableSelection.Chosen -> DatabasePageContent(browser, table.name, offset, { offset = it }, Modifier.weight(1f))
                 }
             }
         }

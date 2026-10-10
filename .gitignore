@@ -10,3 +10,7 @@ kotlin-js-store/
 # Heap snapshots may contain application data.
 *.hprof
 *.hprof.gz
+
+# Python source-policy checks.
+__pycache__/
+*.pyc

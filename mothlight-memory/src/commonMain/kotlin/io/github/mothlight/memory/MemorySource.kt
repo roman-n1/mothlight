@@ -4,13 +4,25 @@ import io.github.mothlight.MemoryOverlaySettings
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
-/** Metrics are distinct measurements; never add them together. Null means unavailable. */
+/** A platform measurement; unavailable is distinct from a measured zero. */
+sealed interface MemoryReading {
+    data object Unavailable : MemoryReading
+    data class Bytes(val value: Long) : MemoryReading {
+        init { require(value >= 0) }
+    }
+    companion object {
+        fun bytes(value: Long): MemoryReading = if (value >= 0) Bytes(value) else Unavailable
+        fun limit(value: Long): MemoryReading = if (value > 0 && value != Long.MAX_VALUE) Bytes(value) else Unavailable
+    }
+}
+
+/** Metrics are distinct measurements; never add them together. */
 data class MemorySnapshot(
-    val heapUsedBytes: Long? = null,
-    val heapLimitBytes: Long? = null,
-    val auxiliaryBytes: Long? = null,
+    val heapUsedBytes: MemoryReading = MemoryReading.Unavailable,
+    val heapLimitBytes: MemoryReading = MemoryReading.Unavailable,
+    val auxiliaryBytes: MemoryReading = MemoryReading.Unavailable,
     val auxiliaryKind: AuxiliaryMemoryKind = AuxiliaryMemoryKind.NATIVE_HEAP,
-    val processBytes: Long? = null,
+    val processBytes: MemoryReading = MemoryReading.Unavailable,
     val processKind: ProcessMemoryKind = ProcessMemoryKind.RESIDENT,
 )
 enum class AuxiliaryMemoryKind { NATIVE_HEAP, JVM_NON_HEAP }
@@ -45,7 +57,7 @@ fun observeMemory(
     }
 }
 
-/** Current process only; unsupported metrics stay null. */
+/** Current process only; unsupported metrics remain MemoryReading.Unavailable. */
 expect fun readMemorySnapshot(): MemorySnapshot
 
 object PlatformMemorySource : MemorySource {

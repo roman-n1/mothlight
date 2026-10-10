@@ -22,7 +22,7 @@ class StartupTrace(private val capacity: Int = 200, private val enabled: () -> B
         state.update { current ->
             val ordered = (current + mark).sortedWith(compareBy<StartupSpan> { it.startedAtMillis }.thenBy { it.id }).takeLast(capacity)
             ordered.mapIndexed { index, span ->
-                val next = ordered.getOrNull(index + 1)?.startedAtMillis ?: span.startedAtMillis
+                val next = ordered.getOrElse(index + 1) { span }.startedAtMillis
                 val difference = next - span.startedAtMillis
                 span.copy(durationMillis = if (difference < 0) Long.MAX_VALUE else difference)
             }

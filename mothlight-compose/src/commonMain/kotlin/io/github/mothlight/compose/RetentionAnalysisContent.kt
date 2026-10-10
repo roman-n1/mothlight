@@ -13,8 +13,8 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-internal fun RetentionAnalysisContent(watcher: RetentionWatcher, analyzer: RetentionAnalyzer?) {
-    if (analyzer == null) {
+internal fun RetentionAnalysisContent(watcher: RetentionWatcher, analyzer: RetentionAnalyzer) {
+    if (analyzer === UnsupportedRetentionAnalyzer) {
         Text(stringResource(Res.string.analysis_unavailable), style = MaterialTheme.typography.bodySmall)
         return
     }
@@ -22,7 +22,7 @@ internal fun RetentionAnalysisContent(watcher: RetentionWatcher, analyzer: Reten
     val state by controller.states.collectAsState(controller.snapshot)
     val snapshot by watcher.snapshots.collectAsState(watcher.snapshot)
     val scope = rememberCoroutineScope()
-    var job by remember(controller) { mutableStateOf<Job?>(null) }
+    var job by remember(controller) { mutableStateOf<Job>(Job().apply { complete() }) }
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(stringResource(Res.string.analysis_capture_hint), style = MaterialTheme.typography.bodySmall)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -30,7 +30,7 @@ internal fun RetentionAnalysisContent(watcher: RetentionWatcher, analyzer: Reten
                 Text(stringResource(Res.string.analysis_start))
             }
             if (state is RetentionAnalysisState.Running) {
-                TextButton(onClick = { job?.cancel() }) { Text(stringResource(Res.string.analysis_cancel)) }
+                TextButton(onClick = { job.cancel() }) { Text(stringResource(Res.string.analysis_cancel)) }
             }
         }
         when (val current = state) {
@@ -47,16 +47,20 @@ internal fun RetentionAnalysisContent(watcher: RetentionWatcher, analyzer: Reten
 
 @Composable
 private fun RetentionReportContent(request: RetentionAnalysisRequest, report: RetentionAnalysisResult.Report) {
-    var selected by remember(report) { mutableStateOf(report.findings.firstOrNull()?.watchId) }
+    var selected by remember(report) { mutableStateOf<AnalysisSelection>(AnalysisSelection.First) }
     val rows = remember(request, report) { analysisRows(request, report) }
-    val finding = remember(report, selected) { report.findings.firstOrNull { it.watchId == selected } }
+    val finding = remember(report, selected) { when (val selection = selected) {
+        AnalysisSelection.First -> report.findings.take(1)
+        is AnalysisSelection.Watched -> report.findings.filter { it.watchId == selection.id }
+    } }
     Text(stringResource(Res.string.analysis_snapshot_hint), style = MaterialTheme.typography.bodySmall)
     rows.forEach { row ->
-        TextButton(onClick = { selected = row.id }) {
+        TextButton(onClick = { selected = AnalysisSelection.Watched(row.id) }) {
             Text(stringResource(Res.string.analysis_finding, row.label, stringResource(findingLabel(row.status))))
         }
     }
-    finding?.path?.let { path ->
+    finding.filterIsInstance<RetentionFinding.StrongPath>().forEach { result ->
+        val path = result.path
         Text(stringResource(Res.string.analysis_root, path.gcRootType))
         Text(stringResource(Res.string.analysis_signature, path.signature), style = MaterialTheme.typography.bodySmall)
         path.references.forEach { reference ->
@@ -69,7 +73,10 @@ private fun RetentionReportContent(request: RetentionAnalysisRequest, report: Re
 internal data class AnalysisRow(val id: Long, val label: String, val status: FindingStatus)
 internal fun analysisRows(request: RetentionAnalysisRequest, report: RetentionAnalysisResult.Report): List<AnalysisRow> {
     val entries = request.entries.associateBy { it.id }
-    return report.findings.mapNotNull { finding -> entries[finding.watchId]?.let { AnalysisRow(it.id, it.label, finding.status) } }
+    return report.findings.filter { it.watchId in entries }.map { finding ->
+        val entry = entries.getValue(finding.watchId)
+        AnalysisRow(entry.id, entry.label, finding.status)
+    }
 }
 internal fun canAnalyze(snapshot: RetentionSnapshot, state: RetentionAnalysisState) =
     snapshot.mode == WatcherMode.RUNNING && snapshot.retainedCount > 0 && state !is RetentionAnalysisState.Running

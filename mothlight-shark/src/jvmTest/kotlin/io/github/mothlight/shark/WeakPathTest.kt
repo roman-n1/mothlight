@@ -19,11 +19,11 @@ class WeakPathTest {
         try {
             val weak = SharkRetentionAnalyzer(directory, HeapDumpCapture { writeFixture(it, strongRoot = false) })
             val weakReport = assertIs<RetentionAnalysisResult.Report>(weak.analyze(request))
-            assertEquals(listOf(RetentionFinding(7, FindingStatus.NO_STRONG_PATH)), weakReport.findings)
+            assertEquals(listOf(RetentionFinding.NoStrongPath(7)), weakReport.findings)
             val strong = SharkRetentionAnalyzer(directory, HeapDumpCapture { writeFixture(it, strongRoot = true) })
             val finding = assertIs<RetentionAnalysisResult.Report>(strong.analyze(request)).findings.single()
             assertEquals(FindingStatus.STRONG_PATH, finding.status)
-            assertEquals(listOf(RetainingReference("fixture.Root", "held", HeapReferenceKind.STATIC_FIELD)), finding.path!!.references)
+            assertEquals(listOf(RetainingReference("fixture.Root", "held", HeapReferenceKind.STATIC_FIELD)), assertIs<RetentionFinding.StrongPath>(finding).path.references)
             assertTrue(directory.listFiles()!!.isEmpty())
         } finally { directory.deleteRecursively() }
     }

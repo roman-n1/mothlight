@@ -8,8 +8,9 @@ class ToolMappersTest {
         val source = listOf(tx("1", "GET", "/alpha"), tx("2", "POST", "/beta"), tx("3", "GET", "/alpha"))
         assertEquals(listOf("3", "1"), networkRows(source, "get /ALPHA").map { it.id })
         assertEquals(listOf("1", "2", "3"), source.map { it.id })
-        assertNull(selectedTransaction(source, "missing"))
-        assertEquals(source[1], selectedTransaction(source, "2"))
+        assertEquals(RequestDetails.Prompt, selectedTransaction(source, NetworkSelection.Unselected))
+        assertEquals(RequestDetails.Prompt, selectedTransaction(source, NetworkSelection.Request("missing")))
+        assertEquals(RequestDetails.Ready(source[1]), selectedTransaction(source, NetworkSelection.Request("2")))
     }
     @Test fun detailsContainActualLineBreaks() {
         assertTrue(requestDetails(tx("1", "GET", "/a")).contains("\n"))
@@ -23,5 +24,5 @@ class ToolMappersTest {
         assertEquals(listOf("b", "a"), MothlightTools(listOf(tool("b"), tool("a"))).entries.map { it.id })
     }
     private fun tx(id: String, method: String, url: String) = NetworkTransaction(id, id.toLong(), method, url,
-        emptyMap(), null, 200, emptyMap(), null, 0, 10, Status.Completed)
+        emptyMap(), CapturedBody.NotCaptured, emptyMap(), CapturedBody.NotCaptured, 0, Status.Completed(200, 10))
 }

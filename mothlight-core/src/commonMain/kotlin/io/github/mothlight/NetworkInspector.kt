@@ -20,7 +20,7 @@ class NetworkInspector(
         method: String,
         url: String,
         headers: Map<String, String>,
-        body: String?,
+        body: CapturedBody,
         now: Long,
     ): String {
         val seq = sequenceCounter.updateAndGet { it + 1 }
@@ -33,23 +33,27 @@ class NetworkInspector(
             url = redactor.url(url),
             requestHeaders = redactor.headers(headers),
             requestBody = redactor.body(body),
-            responseCode = null,
             responseHeaders = emptyMap(),
-            responseBody = null,
+            responseBody = CapturedBody.NotCaptured,
             startedAtMillis = now,
-            durationMillis = null,
             status = Status.InProgress,
         )
         _transactions.update { current -> (current + tx).takeLast(capacity) }
         return id
     }
 
+    fun recordStart(method: String, url: String, headers: Map<String, String>, body: String, now: Long): String =
+        recordStart(method, url, headers, CapturedBody.Text(body), now)
+
+    fun recordSuccess(id: String, code: Int, headers: Map<String, String>, body: String, now: Long) =
+        recordSuccess(id, code, headers, CapturedBody.Text(body), now)
+
     /** Complete only a retained request; late responses never resurrect evicted entries. */
     fun recordSuccess(
         id: String,
         code: Int,
         headers: Map<String, String>,
-        body: String?,
+        body: CapturedBody,
         now: Long,
     ) {
         if (!enabled.value) return
@@ -57,11 +61,9 @@ class NetworkInspector(
             current.map { tx ->
                 if (tx.id != id) return@map tx
                 tx.copy(
-                    responseCode = code,
                     responseHeaders = redactor.headers(headers),
-                    responseBody = redactor.body(body) ?: tx.responseBody,
-                    durationMillis = now - tx.startedAtMillis,
-                    status = Status.Completed,
+                    responseBody = redactor.body(body).let { if (it == CapturedBody.NotCaptured) tx.responseBody else it },
+                    status = Status.Completed(code, now - tx.startedAtMillis),
                 )
             }
         }
@@ -74,8 +76,7 @@ class NetworkInspector(
             current.map { tx ->
                 if (tx.id != id) return@map tx
                 tx.copy(
-                    durationMillis = now - tx.startedAtMillis,
-                    status = Status.Failed(error),
+                    status = Status.Failed(error, now - tx.startedAtMillis),
                 )
             }
         }

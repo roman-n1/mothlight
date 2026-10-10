@@ -7,7 +7,7 @@ import io.github.mothlight.memory.mach.mothlight_physical_footprint
 actual fun readMemorySnapshot(): MemorySnapshot {
     val footprint = mothlight_physical_footprint()
     return MemorySnapshot(
-        processBytes = footprint.takeIf { it > 0uL && it <= Long.MAX_VALUE.toULong() }?.toLong(),
+        processBytes = if (footprint > 0uL && footprint <= Long.MAX_VALUE.toULong()) MemoryReading.Bytes(footprint.toLong()) else MemoryReading.Unavailable,
         processKind = ProcessMemoryKind.PHYSICAL_FOOTPRINT,
     )
 }

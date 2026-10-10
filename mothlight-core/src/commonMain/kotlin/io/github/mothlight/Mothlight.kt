@@ -3,7 +3,7 @@ package io.github.mothlight
 import kotlinx.coroutines.flow.StateFlow
 
 /** Own one instance in your application graph. No process-global registries or collectors. */
-class Mothlight(capacity: Int = 200, redactor: Redactor = Redactor(), memoryOverlayStore: MemoryOverlayStore? = null) {
+class Mothlight(capacity: Int = 200, redactor: Redactor = Redactor(), memoryOverlayStore: MemoryOverlayStore = TransientMemoryOverlayStore) {
     val memoryOverlay = MemoryOverlaySettings(memoryOverlayStore)
     val network = NetworkInspector(capacity, redactor)
     val enabled: StateFlow<Boolean> = network.enabled

@@ -6,6 +6,11 @@ import kotlin.test.*
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class RetentionAnalysisTest {
+    @Test fun defaultAnalyzerReportsUnsupportedInsteadOfMissingImplementation() = runTest {
+        assertEquals(RetentionAnalysisResult.Unsupported,
+            UnsupportedRetentionAnalyzer.analyze(RetentionAnalysisRequest("s", 0, emptyList())))
+    }
+
     @Test fun requestsUseSessionAndOnlyCurrentlyRetainedEntries() = runTest {
         val backend = FakeBackend()
         var now = 0L
@@ -30,7 +35,7 @@ class RetentionAnalysisTest {
         val release = CompletableDeferred<Unit>()
         var calls = 0
         val analyzer = RetentionAnalyzer { request ->
-            calls++; release.await(); RetentionAnalysisResult.Report(request.entries.map { RetentionFinding(it.id, FindingStatus.NOT_IN_DUMP) })
+            calls++; release.await(); RetentionAnalysisResult.Report(request.entries.map { RetentionFinding.NotInDump(it.id) })
         }
         val controller = RetentionAnalysisController(watcher, analyzer)
         val task = launch { controller.analyze() }

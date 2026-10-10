@@ -73,7 +73,7 @@ mothlight.invariants.record(
     severity = InvariantSeverity.WARNING,
     timestampMillis = nowMillis,
     sampleJson = """{"index":3,"token":"private"}""",
-    screen = "Details",
+    screen = ScreenContext.Named("Details"),
 )
 ```
 

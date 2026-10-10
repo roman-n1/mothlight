@@ -221,7 +221,12 @@ a live badge, search and collection history.
 
 ## Development
 
+Library contracts use explicit domain states instead of nullable values or
+`Optional` containers. See the [null-free contracts and migration guide](docs/null-contracts.md).
+
 ```shell
+python3 -m unittest discover -s scripts/tests -v
+python3 scripts/check_null_contracts.py
 python3 scripts/check_resources.py
 ./gradlew :mothlight-core:jvmTest :mothlight-compose:jvmTest :mothlight-ktor:jvmTest :mothlight-okhttp:jvmTest
 ```

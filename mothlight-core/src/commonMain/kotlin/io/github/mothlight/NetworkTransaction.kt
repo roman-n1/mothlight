@@ -7,18 +7,16 @@ data class NetworkTransaction(
     val method: String,
     val url: String,
     val requestHeaders: Map<String, String>,
-    val requestBody: String?,
-    val responseCode: Int?,
+    val requestBody: CapturedBody,
     val responseHeaders: Map<String, String>,
-    val responseBody: String?,
+    val responseBody: CapturedBody,
     val startedAtMillis: Long,
-    val durationMillis: Long?,
     val status: Status,
 )
 
 /** A response with any HTTP code is Completed; transport errors are Failed. */
 sealed interface Status {
     data object InProgress : Status
-    data object Completed : Status
-    data class Failed(val error: String) : Status
+    data class Completed(val code: Int, val durationMillis: Long) : Status
+    data class Failed(val error: String, val durationMillis: Long) : Status
 }

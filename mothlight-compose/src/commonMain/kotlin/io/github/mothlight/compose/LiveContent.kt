@@ -35,7 +35,10 @@ internal fun SqlContent(mothlight: Mothlight, modifier: Modifier) {
                         ListItem(headlineContent = { Text(event.sql) }, supportingContent = {
                             Column {
                                 Text(stringResource(Res.string.duration_ms, event.durationMillis.toString()))
-                                event.errorType?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                                when (val outcome = event.outcome) {
+                                    SqlOutcome.Succeeded -> Unit
+                                    is SqlOutcome.Failed -> Text(outcome.category, color = MaterialTheme.colorScheme.error)
+                                }
                             }
                         })
                         HorizontalDivider()

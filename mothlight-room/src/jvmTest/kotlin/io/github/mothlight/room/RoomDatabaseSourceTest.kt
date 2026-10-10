@@ -3,6 +3,7 @@ package io.github.mothlight.room
 import androidx.room.*
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import io.github.mothlight.DatabaseBrowser
+import io.github.mothlight.DatabaseCell
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collect
@@ -29,10 +30,10 @@ class RoomDatabaseSourceTest {
             assertEquals(listOf("items"), source.tables())
             val snapshots = Channel<io.github.mothlight.DatabasePage>(Channel.UNLIMITED)
             val job = backgroundScope.launch { DatabaseBrowser(source).page("items").collect { snapshots.send(it) } }
-            assertEquals(listOf("1", "before", "***"), snapshots.receive().rows.single())
+            assertEquals(listOf(DatabaseCell.Text("1"), DatabaseCell.Text("before"), DatabaseCell.Text("***")), snapshots.receive().rows.single())
             db.items().rename("after")
             // An observable invalidation signal, not a delay or real-time polling.
-            assertEquals(listOf("1", "after", "***"), snapshots.receive().rows.single())
+            assertEquals(listOf(DatabaseCell.Text("1"), DatabaseCell.Text("after"), DatabaseCell.Text("***")), snapshots.receive().rows.single())
             job.cancelAndJoin()
         } finally { db.close() }
     }

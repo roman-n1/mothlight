@@ -25,9 +25,9 @@ class DiagnosticsMappersTest {
         val entries = listOf(NavigationEntry(1, "Home", NavigationDirection.RESET, 1), NavigationEntry(2, "Details", NavigationDirection.PUSH, 2), NavigationEntry(3, "Home", NavigationDirection.POP, 3))
         assertEquals(listOf(3L, 1L), navigationRows(entries, "HOME").map { it.id })
         val snapshot = InvariantSnapshot(counters = listOf(
-            InvariantStat("frequent", 100, InvariantSeverity.INFO, InvariantSeverity.INFO, 1, null, null),
-            InvariantStat("second", 1, InvariantSeverity.ERROR, InvariantSeverity.WARNING, 2, null, "Details"),
-            InvariantStat("first", 2, InvariantSeverity.ERROR, InvariantSeverity.ERROR, 3, null, "Home"),
+            InvariantStat("frequent", 100, InvariantSeverity.INFO, InvariantSeverity.INFO, 1, CapturedBody.NotCaptured, ScreenContext.Unspecified),
+            InvariantStat("second", 1, InvariantSeverity.ERROR, InvariantSeverity.WARNING, 2, CapturedBody.NotCaptured, ScreenContext.Named("Details")),
+            InvariantStat("first", 2, InvariantSeverity.ERROR, InvariantSeverity.ERROR, 3, CapturedBody.NotCaptured, ScreenContext.Named("Home")),
         ))
         assertEquals(listOf("first", "second", "frequent"), invariantRows(snapshot, "").map { it.rule })
         assertEquals(listOf("second"), invariantRows(snapshot, "DETAILS").map { it.rule })

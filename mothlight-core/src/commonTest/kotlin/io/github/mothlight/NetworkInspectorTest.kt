@@ -7,44 +7,40 @@ import kotlinx.coroutines.test.runTest
 class NetworkInspectorTest {
     @Test fun disabledInspectorDoesNotRecord() {
         val inspector = NetworkInspector()
-        inspector.recordStart("GET", "https://example.test", emptyMap(), null, 0)
+        inspector.recordStart("GET", "https://example.test", emptyMap(), CapturedBody.NotCaptured, 0)
         assertEquals(emptyList(), inspector.transactions.value)
     }
     @Test fun redactionHappensBeforePublicationAndNestedJsonIsMasked() {
         val inspector = NetworkInspector(redactor = Redactor(captureJsonBodies = true))
         inspector.setEnabled(true)
-        val id = inspector.recordStart("POST", "https://user:secret@example.test/items?token=hidden#hidden",
-            mapOf("aUtHoRiZaTiOn" to "secret", "X-Api-Key" to "secret", "Accept" to "application/json"),
-            """{"nested":[{"access_token":"secret","name":"visible"}],"password":42}""", 10)
+        val id = inspector.recordStart("POST", "https://user:secret@example.test/items?token=hidden#hidden", mapOf("aUtHoRiZaTiOn" to "secret", "X-Api-Key" to "secret", "Accept" to "application/json"), """{"nested":[{"access_token":"secret","name":"visible"}],"password":42}""", 10)
         inspector.recordSuccess(id, 201, mapOf("Set-Cookie" to "secret"), """{"ok":true}""", 35)
         val tx = inspector.transactions.value.single()
         assertEquals("https://example.test/items", tx.url)
         assertEquals(mapOf("aUtHoRiZaTiOn" to "***", "X-Api-Key" to "***", "Accept" to "application/json"), tx.requestHeaders)
-        assertEquals("""{"nested":[{"access_token":"***","name":"visible"}],"password":"***"}""", tx.requestBody)
+        assertEquals(CapturedBody.Text("""{"nested":[{"access_token":"***","name":"visible"}],"password":"***"}"""), tx.requestBody)
         assertEquals(mapOf("Set-Cookie" to "***"), tx.responseHeaders)
-        assertEquals(25L, tx.durationMillis)
-        assertEquals(Status.Completed, tx.status)
-        assertEquals(201, tx.responseCode)
+        assertEquals(Status.Completed(201, 25), tx.status)
     }
     @Test fun bodiesAreOptInAndMalformedOrOversizedBodiesAreNotRetained() {
-        assertNull(Redactor().body("""{"message":"private"}"""))
+        assertEquals(CapturedBody.NotCaptured, Redactor().body("""{"message":"private"}"""))
         val redactor = Redactor(captureJsonBodies = true, bodyLimit = 40)
-        assertEquals("[body omitted: not JSON]", redactor.body("password=private"))
-        assertEquals("[body omitted: size limit]", redactor.body("s".repeat(41)))
-        assertEquals("""{"x":"***"}""", Redactor(true, additionalSensitiveKeys = setOf("x")).body("""{"x":"private"}"""))
+        assertEquals(CapturedBody.NotJson, redactor.body("password=private"))
+        assertEquals(CapturedBody.TooLarge, redactor.body("s".repeat(41)))
+        assertEquals(CapturedBody.Text("""{"x":"***"}"""), Redactor(true, additionalSensitiveKeys = setOf("x")).body("""{"x":"private"}"""))
     }
     @Test fun lateResponseDoesNotResurrectEvictedOrClearedRequest() {
         val inspector = NetworkInspector(capacity = 1)
         inspector.setEnabled(true)
-        val first = inspector.recordStart("GET", "/first", emptyMap(), null, 0)
-        val second = inspector.recordStart("GET", "/second", emptyMap(), null, 1)
-        inspector.recordSuccess(first, 200, emptyMap(), null, 2)
+        val first = inspector.recordStart("GET", "/first", emptyMap(), CapturedBody.NotCaptured, 0)
+        val second = inspector.recordStart("GET", "/second", emptyMap(), CapturedBody.NotCaptured, 1)
+        inspector.recordSuccess(first, 200, emptyMap(), CapturedBody.NotCaptured, 2)
         assertEquals(listOf(second), inspector.transactions.value.map { it.id })
         assertEquals(Status.InProgress, inspector.transactions.value.single().status)
         inspector.clear()
-        inspector.recordSuccess(second, 200, emptyMap(), null, 3)
+        inspector.recordSuccess(second, 200, emptyMap(), CapturedBody.NotCaptured, 3)
         assertEquals(emptyList(), inspector.transactions.value)
-        val third = inspector.recordStart("GET", "/third", emptyMap(), null, 4)
+        val third = inspector.recordStart("GET", "/third", emptyMap(), CapturedBody.NotCaptured, 4)
         assertNotEquals(first, third)
         assertNotEquals(second, third)
     }
@@ -52,8 +48,8 @@ class NetworkInspectorTest {
         val first = Mothlight()
         val second = Mothlight()
         first.setEnabled(true)
-        first.network.recordStart("GET", "/a", emptyMap(), null, 0)
-        second.network.recordStart("GET", "/b", emptyMap(), null, 0)
+        first.network.recordStart("GET", "/a", emptyMap(), CapturedBody.NotCaptured, 0)
+        second.network.recordStart("GET", "/b", emptyMap(), CapturedBody.NotCaptured, 0)
         first.logs.record(LogEntry("1", 0, LogLevel.INFO, "test", "message"))
         first.events.record(DiagnosticEvent("1", 0, "startup", "ready"))
         assertEquals(1, first.network.transactions.value.size)
@@ -73,11 +69,11 @@ class NetworkInspectorTest {
         inspector.setEnabled(true)
         coroutineScope {
             repeat(100) { index -> launch(Dispatchers.Default) {
-                val id = inspector.recordStart("GET", "/$index", emptyMap(), null, 10)
-                inspector.recordSuccess(id, 200, emptyMap(), null, 30)
+                val id = inspector.recordStart("GET", "/$index", emptyMap(), CapturedBody.NotCaptured, 10)
+                inspector.recordSuccess(id, 200, emptyMap(), CapturedBody.NotCaptured, 30)
             } }
         }
         assertEquals(100, inspector.transactions.value.map { it.id }.toSet().size)
-        assertTrue(inspector.transactions.value.all { it.status == Status.Completed })
+        assertTrue(inspector.transactions.value.all { it.status is Status.Completed })
     }
 }

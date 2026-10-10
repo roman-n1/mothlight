@@ -6,7 +6,8 @@ Its run history is the source of truth for the current commit's pass/fail status
 
 | Area | Automated check |
 | --- | --- |
-| Core | 24 JVM tests: gate, capacity, isolation, HTTP lifecycle, redaction, concurrency, cURL, live source cancellation, SQL statistics, realtime capture, typed diagnostics and concurrent writers |
+| Null contracts | Dedicated `null-contracts` job: tokenizer regression tests and all handwritten library production source sets, with no baseline or suppression |
+| Core | JVM tests: gate, capacity, isolation, HTTP lifecycle, redaction, concurrency, cURL, live source cancellation, SQL statistics, realtime capture, typed diagnostics and concurrent writers |
 | Compose | JVM tests: retention filtering and panel selection, mapper behavior, detail formatting, tool registration contracts, database paging, SQL/channel filters, startup waterfall, lifecycle balance, invariant priority |
 | Retention | Common observation and analysis lifecycle tests; JVM concurrent registration/key retry; iOS real released-versus-rooted weak references |
 | Shark | Real HotSpot dumps: marker IDs, rooted path, duplicate watches, independent sessions and released control; synthetic weak-only vs strong graph; corrupt/oversized/cancelled capture cleanup |
@@ -75,6 +76,12 @@ can be consumed by a native Android project. The network module has no UI depend
   was changed to contain spaces. The adapter now quotes the JVM diagnostic-command
   argument separately from process arguments and tests both quote styles.
   [Desktop path RED run](https://github.com/roman-n1/mothlight/actions/runs/38057780495).
+
+- The null-contract gate rejects the pre-migration main with 115 violations across
+  29 files, including nullable declarations, assertions and an unbounded generic.
+  The SQLite malformed-count test first failed with `NullPointerException` where
+  an explicit executor-contract failure was expected. Both are covered by the
+  null-free migration's checks and tests.
 
 ## Limits
 

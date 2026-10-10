@@ -50,7 +50,7 @@ fun main() = application {
                     OutlinedButton(onClick = { demo.releaseObject(releaseLabel) }) { Text(stringResource(Res.string.release_object)) }
                     OutlinedButton(onClick = demo::log) { Text(stringResource(Res.string.add_log)) }
                 }
-                MemoryUsageOverlay(demo.mothlight, retentionWatcher = demo.retentionWatcher, onOpenRetention = { panelState.selectTool("retention") })
+                MemoryUsageOverlay(demo.mothlight, retention = RetentionOverlay.Visible(demo.retentionWatcher, RetentionAction.OpenTool { panelState.selectTool("retention") }))
                 MothlightPanel(demo.mothlight, Modifier.fillMaxWidth().weight(1f), tools, panelState)
             }
         }

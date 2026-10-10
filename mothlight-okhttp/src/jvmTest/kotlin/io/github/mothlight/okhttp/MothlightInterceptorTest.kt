@@ -27,10 +27,10 @@ class MothlightInterceptorTest {
         val result = api.items().execute()
         result.body()!!.use { assertEquals("""{"token":"secret","ok":true}""", it.string()) }
         val tx = inspector.transactions.value.single()
-        assertEquals(Status.Completed, tx.status)
+        assertIs<Status.Completed>(tx.status)
         assertEquals("https://example.test/items", tx.url)
         assertEquals("***", tx.responseHeaders["set-cookie"] ?: tx.responseHeaders["Set-Cookie"])
-        assertEquals("""{"token":"***","ok":true}""", tx.responseBody)
+        assertEquals(CapturedBody.Text("""{"token":"***","ok":true}"""), tx.responseBody)
     }
     @Test fun disabledInterceptorStillReturnsResponseWithoutRecording() {
         val inspector = NetworkInspector()
@@ -49,7 +49,7 @@ class MothlightInterceptorTest {
             client.newCall(Request.Builder().url("https://example.test").build()).execute()
         }
         assertSame(failure, caught)
-        assertEquals(Status.Failed("TransportError"), inspector.transactions.value.single().status)
+        assertEquals("TransportError", assertIs<Status.Failed>(inspector.transactions.value.single().status).error)
     }
     @Test fun oneShotUploadIsNotReadByInspector() {
         val inspector = NetworkInspector(redactor = Redactor(captureJsonBodies = true))
@@ -68,7 +68,7 @@ class MothlightInterceptorTest {
         }
         client.newCall(Request.Builder().url("https://example.test").post(body).build()).execute().close()
         assertEquals(1, writes)
-        assertNull(inspector.transactions.value.single().requestBody)
+        assertEquals(CapturedBody.NotCaptured, inspector.transactions.value.single().requestBody)
     }
     @Test fun largeBodyIsOmittedAndOriginalRemainsReadable() {
         val inspector = NetworkInspector(redactor = Redactor(captureJsonBodies = true, bodyLimit = 32))
@@ -77,6 +77,6 @@ class MothlightInterceptorTest {
         client(inspector) { response(it, original) }.newCall(Request.Builder().url("https://example.test").build()).execute().use {
             assertEquals(original, it.body!!.string())
         }
-        assertEquals("[body omitted: size limit]", inspector.transactions.value.single().responseBody)
+        assertEquals(CapturedBody.TooLarge, inspector.transactions.value.single().responseBody)
     }
 }

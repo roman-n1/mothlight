@@ -15,7 +15,19 @@ enum class HeapReferenceKind { INSTANCE_FIELD, STATIC_FIELD, LOCAL, ARRAY_ENTRY 
 data class RetainingReference(val ownerClass: String, val referenceName: String, val kind: HeapReferenceKind)
 /** A path in one snapshot is evidence of retention, not proof that the application's lifetime contract is correct. */
 data class RetainingPath(val gcRootType: String, val references: List<RetainingReference>, val targetClass: String, val signature: String)
-data class RetentionFinding(val watchId: Long, val status: FindingStatus, val path: RetainingPath? = null)
+sealed interface RetentionFinding {
+    val watchId: Long
+    val status: FindingStatus
+    data class StrongPath(override val watchId: Long, val path: RetainingPath) : RetentionFinding {
+        override val status = FindingStatus.STRONG_PATH
+    }
+    data class NotInDump(override val watchId: Long) : RetentionFinding {
+        override val status = FindingStatus.NOT_IN_DUMP
+    }
+    data class NoStrongPath(override val watchId: Long) : RetentionFinding {
+        override val status = FindingStatus.NO_STRONG_PATH
+    }
+}
 sealed interface RetentionAnalysisResult {
     data class Report(val findings: List<RetentionFinding>) : RetentionAnalysisResult
     data class Failed(val failure: AnalysisFailure) : RetentionAnalysisResult
@@ -24,6 +36,10 @@ sealed interface RetentionAnalysisResult {
 fun interface RetentionAnalyzer {
     /** Explicit, potentially expensive capture. Must clean up temporary data even on cancellation. */
     suspend fun analyze(request: RetentionAnalysisRequest): RetentionAnalysisResult
+}
+/** Default behavior for hosts without a heap analyzer. */
+object UnsupportedRetentionAnalyzer : RetentionAnalyzer {
+    override suspend fun analyze(request: RetentionAnalysisRequest) = RetentionAnalysisResult.Unsupported
 }
 sealed interface RetentionAnalysisState {
     data object Idle : RetentionAnalysisState

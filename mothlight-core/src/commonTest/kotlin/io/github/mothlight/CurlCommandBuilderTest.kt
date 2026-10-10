@@ -47,12 +47,10 @@ class CurlCommandBuilderTest {
             method = method,
             url = "https://api.test/v1/chats",
             requestHeaders = headers,
-            requestBody = body,
-            responseCode = 200,
+            requestBody = body?.let { CapturedBody.Text(it) } ?: CapturedBody.NotCaptured,
             responseHeaders = emptyMap(),
-            responseBody = null,
+            responseBody = CapturedBody.NotCaptured,
             startedAtMillis = 0,
-            durationMillis = 1,
-            status = Status.Completed,
+            status = Status.Completed(200, 1),
         )
 }
