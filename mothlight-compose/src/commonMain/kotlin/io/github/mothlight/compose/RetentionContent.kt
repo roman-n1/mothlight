@@ -16,12 +16,12 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
 /** Optional tool: the host owns the watcher's scope and reports lifetime boundaries. */
-fun retentionTool(watcher: RetentionWatcher, id: String = "retention") = MothlightTool(
-    id, { stringResource(Res.string.retention_title) }, { RetentionContent(watcher, it) },
+fun retentionTool(watcher: RetentionWatcher, id: String = "retention", analyzer: RetentionAnalyzer? = null) = MothlightTool(
+    id, { stringResource(Res.string.retention_title) }, { RetentionContent(watcher, it, analyzer) },
 )
 
 @Composable
-private fun RetentionContent(watcher: RetentionWatcher, modifier: Modifier) {
+private fun RetentionContent(watcher: RetentionWatcher, modifier: Modifier, analyzer: RetentionAnalyzer? = null) {
     val snapshot by watcher.snapshots.collectAsState(watcher.snapshot)
     val scope = rememberCoroutineScope()
     var query by remember { mutableStateOf("") }
@@ -48,6 +48,7 @@ private fun RetentionContent(watcher: RetentionWatcher, modifier: Modifier) {
                         Text(stringResource(Res.string.retention_gc))
                     }
                 }
+                RetentionAnalysisContent(watcher, analyzer)
                 OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(Res.string.retention_search)) }, singleLine = true)
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     RetentionFilter.entries.forEach { choice ->

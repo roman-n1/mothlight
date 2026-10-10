@@ -50,7 +50,7 @@ class MainActivity : ComponentActivity() {
         database = Room.inMemoryDatabaseBuilder(this, DemoDatabase::class.java)
             .setDriver(TracingSQLiteDriver(BundledSQLiteDriver(), mothlight.sql, { mothlight.enabled.value }))
             .setQueryCoroutineContext(Dispatchers.IO).build()
-        val tools = MothlightTools(defaultMothlightTools(mothlight).entries + databaseTool(RoomDatabaseSource(database)) + retentionTool(retentionWatcher))
+        val tools = MothlightTools(defaultMothlightTools(mothlight).entries + databaseTool(RoomDatabaseSource(database)) + retentionTool(retentionWatcher, analyzer = io.github.mothlight.shark.androidRetentionAnalyzer(this)))
         val layout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         val requestButton = Button(this).apply {
             setText(R.string.mock_request)

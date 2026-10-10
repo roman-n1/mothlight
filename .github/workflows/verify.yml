@@ -25,9 +25,9 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - run: python3 scripts/check_resources.py
       - run: python3 scripts/check_shrinker.py
-      - run: ./gradlew :mothlight-core:jvmTest :mothlight-memory:jvmTest :mothlight-retention:jvmTest :mothlight-sqlite:jvmTest :mothlight-room:jvmTest :mothlight-room3:jvmTest :mothlight-compose:jvmTest :mothlight-ktor:jvmTest :mothlight-okhttp:jvmTest :sample-desktop:classes :sample-android:assembleDebug :sample-android:assembleRelease --continue
+      - run: ./gradlew :mothlight-core:jvmTest :mothlight-memory:jvmTest :mothlight-retention:jvmTest :mothlight-shark:jvmTest :mothlight-sqlite:jvmTest :mothlight-room:jvmTest :mothlight-room3:jvmTest :mothlight-compose:jvmTest :mothlight-ktor:jvmTest :mothlight-okhttp:jvmTest :sample-desktop:classes :sample-android:assembleDebug :sample-android:assembleRelease --continue
       - name: Package consumer rules
-        run: ./gradlew :mothlight-core:bundleAndroidMainAar :mothlight-compose:bundleAndroidMainAar :mothlight-ktor:bundleAndroidMainAar :mothlight-memory:bundleAndroidMainAar :mothlight-retention:bundleAndroidMainAar :mothlight-room:bundleAndroidMainAar :mothlight-room3:bundleAndroidMainAar :mothlight-sqlite:bundleAndroidMainAar :mothlight-okhttp:bundleAndroidMainAar :mothlight-android:bundleReleaseAar :mothlight-memory:jvmJar
+        run: ./gradlew :mothlight-core:bundleAndroidMainAar :mothlight-compose:bundleAndroidMainAar :mothlight-ktor:bundleAndroidMainAar :mothlight-memory:bundleAndroidMainAar :mothlight-retention:bundleAndroidMainAar :mothlight-shark:bundleAndroidMainAar :mothlight-room:bundleAndroidMainAar :mothlight-room3:bundleAndroidMainAar :mothlight-sqlite:bundleAndroidMainAar :mothlight-okhttp:bundleAndroidMainAar :mothlight-android:bundleReleaseAar :mothlight-memory:jvmJar :mothlight-retention:jvmJar
       - run: python3 scripts/check_shrinker.py --artifacts
       - uses: actions/upload-artifact@v4
         if: always()

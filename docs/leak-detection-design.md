@@ -1,8 +1,9 @@
 # Leak detection: research and proposed direction
 
 Research date: 2026-10-10. [Portable observation, the retention tool and badge](retention.md)
-are implemented. Heap analysis and native dump conversion below remain proposals;
-a retained object is not a confirmed leak.
+are implemented. The optional Android/JVM Shark adapter now captures HPROF and
+reports strong root paths with signatures. Native dump conversion, retained sizes
+and automatic cause grouping below remain proposals; a retained object is not a confirmed leak.
 
 ## What to reuse
 
@@ -27,7 +28,8 @@ second parser. Android-specific inspectors belong only to the Android adapter.
 
 The latest GitHub release inspected was `v3.0-alpha-9`; the source links above
 point at main and are not a promise that those exact APIs exist in a stable
-artifact. Pin and validate the chosen released version before integration.
+artifact. The implemented adapter pins stable Shark 2.14 from Maven Central and
+checks it against real HotSpot HPROF plus deterministic weak/strong graph fixtures.
 [Release](https://github.com/square/leakcanary/releases/tag/v3.0-alpha-9).
 
 ## Other tools and the platform boundary

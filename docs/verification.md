@@ -7,8 +7,9 @@ Its run history is the source of truth for the current commit's pass/fail status
 | Area | Automated check |
 | --- | --- |
 | Core | 24 JVM tests: gate, capacity, isolation, HTTP lifecycle, redaction, concurrency, cURL, live source cancellation, SQL statistics, realtime capture, typed diagnostics and concurrent writers |
-| Compose | 15 JVM tests: retention filtering and panel selection, mapper behavior, detail formatting, tool registration contracts, database paging, SQL/channel filters, startup waterfall, lifecycle balance, invariant priority |
-| Retention | 8 common virtual-time/lifecycle tests, JVM concurrent writers and rooted weak reference, iOS real released-versus-rooted weak references |
+| Compose | JVM tests: retention filtering and panel selection, mapper behavior, detail formatting, tool registration contracts, database paging, SQL/channel filters, startup waterfall, lifecycle balance, invariant priority |
+| Retention | Common observation and analysis lifecycle tests; JVM concurrent registration/key retry; iOS real released-versus-rooted weak references |
+| Shark | Real HotSpot dumps: marker IDs, rooted path, duplicate watches, independent sessions and released control; synthetic weak-only vs strong graph; corrupt/oversized/cancelled capture cleanup |
 | Memory | Virtual-time start/stop/cancellation/recovery tests; live JVM heap, Linux resident readings and explicit Windows process unavailability; iOS physical footprint test |
 | Ktor | 4 JVM tests through MockEngine: response preservation, masking, disabled capture, error transparency |
 | OkHttp / Retrofit | 5 JVM tests through real OkHttp/Retrofit pipelines with a terminal mock transport |
@@ -65,6 +66,15 @@ can be consumed by a native Android project. The network module has no UI depend
   [No-reflection RED run](https://github.com/roman-n1/mothlight/actions/runs/38054898119).
 - The local shrinker guard first failed on missing consumer wiring, then identified
   JNA and the three runtime class-name lookups before their removal.
+
+- Heap-analysis identity first failed on a real JVM dump: the watched reference
+  had no stable identifier for the analyzer.
+  [Heap identity RED run](https://github.com/roman-n1/mothlight/actions/runs/38056908180).
+
+- Desktop capture failed with the same real-heap test when only the cache path
+  was changed to contain spaces. The adapter now quotes the JVM diagnostic-command
+  argument separately from process arguments and tests both quote styles.
+  [Desktop path RED run](https://github.com/roman-n1/mothlight/actions/runs/38057780495).
 
 ## Limits
 

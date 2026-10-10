@@ -3,6 +3,7 @@ package io.github.mothlight.retention
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlin.time.TimeSource
+import kotlin.random.Random
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -32,6 +33,7 @@ fun interface WeakHandle { fun isAlive(): Boolean }
 interface RetentionBackend {
     val support: RetentionSupport
     fun reference(target: Any): WeakHandle
+    fun reference(target: Any, key: WatchKey): WeakHandle = reference(target)
     /** Best effort on JVM/Android; completion is not a leak verdict. */
     fun requestCollection()
 }
@@ -52,6 +54,7 @@ class RetentionWatcher(
         require(graceMillis >= 0) { "Retention grace period must not be negative" }
         require(intervalMillis > 0) { "Retention interval must be positive" }
     }
+    private val sessionId = List(4) { Random.nextLong().toString(16) }.joinToString("-")
     private val support = backend.support
     private val state = MutableStateFlow(TrackingState(
         mode = if (support == RetentionSupport.UNSUPPORTED) WatcherMode.UNSUPPORTED else WatcherMode.DISABLED,
@@ -84,6 +87,7 @@ class RetentionWatcher(
 
     fun expectReleased(target: Any, label: String, reason: String): WatchResult {
         var handle: WeakHandle? = null
+        var handleId: Long? = null
         val watchedAt = nowMillis()
         while (true) {
             val current = state.value
@@ -94,7 +98,8 @@ class RetentionWatcher(
                 WatcherMode.RUNNING -> Unit
             }
             // Create the weak handle before any deferred work. Neither CAS closure nor worker captures target.
-            val weak = handle ?: backend.reference(target).also { handle = it }
+            val weak = if (handleId == current.nextId) checkNotNull(handle) else
+                backend.reference(target, WatchKey(sessionId, current.nextId)).also { handle = it; handleId = current.nextId }
             val entry = RetentionEntry(current.nextId, label.take(256), reason.take(512), RetentionState.WATCHING, watchedAt, 0)
             val expanded = current.tracked + Tracked(entry, weak)
             val next = current.copy(
@@ -144,6 +149,18 @@ class RetentionWatcher(
                 lastCheck = if (requestCollection) RetentionCheck.COLLECTION_REQUESTED else RetentionCheck.OBSERVED,
             )
         }
+    }
+
+    /** Immutable metadata only; never carries a strong reference to a watched object. */
+    fun analysisRequest(): RetentionAnalysisRequest {
+        val current = state.value
+        val entries = if (current.mode == WatcherMode.RUNNING) current.tracked.map { it.entry }.filter { it.state == RetentionState.RETAINED } else emptyList()
+        return RetentionAnalysisRequest(sessionId, current.epoch, entries)
+    }
+
+    fun isCurrent(request: RetentionAnalysisRequest): Boolean {
+        val current = state.value
+        return request.sessionId == sessionId && request.generation == current.epoch && current.mode == WatcherMode.RUNNING
     }
 
     fun clear() { state.update { it.reset(it.mode) } }
