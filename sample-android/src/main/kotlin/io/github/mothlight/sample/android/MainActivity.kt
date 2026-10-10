@@ -85,7 +85,12 @@ class MainActivity : ComponentActivity() {
         }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         retentionActions.addView(Button(this).apply {
             setText(R.string.release_object)
-            setOnClickListener { heldObject = null }
+            setOnClickListener {
+                if (heldObject != null) {
+                    mothlight.events.record(DiagnosticEvent("release-${++sequence}", System.currentTimeMillis(), "retention", getString(R.string.release_object)))
+                }
+                heldObject = null
+            }
         }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         layout.addView(retentionActions)
         layout.addView(createMemoryOverlayView(this, mothlight, retentionWatcher = retentionWatcher, onOpenRetention = { panelState.selectTool("retention") }))

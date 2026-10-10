@@ -25,7 +25,10 @@ class DemoSession {
         heldObject = target
         retentionWatcher.expectReleased(target, label, reason)
     }
-    fun releaseObject() { heldObject = null }
+    fun releaseObject(label: String) {
+        if (heldObject != null) event("retention", label)
+        heldObject = null
+    }
     val mothlight = Mothlight(redactor = Redactor(captureJsonBodies = true))
     private val database = Room.inMemoryDatabaseBuilder<DemoDatabase>()
         .setDriver(TracingSQLiteDriver(BundledSQLiteDriver(), mothlight.sql, { mothlight.enabled.value }))
