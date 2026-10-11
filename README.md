@@ -87,11 +87,15 @@ Android minimum SDK: 23.
 ./gradlew :sample-android:assembleDebug
 ```
 
-Open the panel, inspect a synthetic request and explore the built-in tools.
-The retention demo deliberately holds an object: release it, then recheck its
-observation in the panel.
+The Android launcher opens **Mothlight Weather**: choose a city, fetch current
+weather through Retrofit and keep observations in a disk-backed Room database.
+Inspect the same request in HTTP, `weather_readings` in Database, queries in SQL,
+and Android Logcat messages in Logs. No API key is needed. See the
+[weather walkthrough](docs/weather-sample.md) for setup, offline behavior and integration points.
 
-The samples use mock transports. They do not contact a backend or require credentials.
+**More diagnostics** opens the original synthetic scenarios, including deliberate
+object retention. The desktop demo still uses mock transports. The weather screen
+contacts Open-Meteo only when you press Refresh.
 
 Platform targets: Android, JVM, iOS arm64/simulator arm64, JS and Wasm. See
 [verification](docs/verification.md) for what was actually tested; declaring a target
@@ -231,9 +235,9 @@ redacted data; it is not an authenticated replay facility.
 | `mothlight-sqlite` | SQLiteDriver tracing and read-only table source | No |
 | `mothlight-room` | Room 2 live database adapter (Android/JVM/iOS) | No |
 | `mothlight-room3` | Room 3 live database adapter (Android/JVM/iOS) | No |
-| `mothlight-android` | View factory for Activities and Fragments | No Compose source/compiler required |
+| `mothlight-android` | View factories and opt-in own-process Logcat capture | No Compose source/compiler required |
 | `sample-desktop` | Interactive demo with synthetic Ktor responses and a custom tab | Demo |
-| `sample-android` | Native Android Views + Retrofit demo, synthetic responses | No |
+| `sample-android` | Weather app: real Retrofit HTTP, persistent Room, Logcat + synthetic diagnostic screen | No |
 
 English is the fallback language. Russian is selected automatically for a Russian
 application locale. Panel strings, hints and sample controls are localized.

@@ -8,7 +8,7 @@ to build Mothlight.
 | Original capability | Mothlight status | Remaining work |
 | --- | --- | --- |
 | HTTP transactions, request details, cURL | Available; Ktor and OkHttp/Retrofit | Explicit replay UI |
-| Logs and generic diagnostic events | Available | Category-specific drill-down |
+| Logs and generic diagnostic events | Available, including opt-in own-process Android Logcat | Category-specific drill-down |
 | Room table browser and invalidations | Available; Room 2/3 adapters | Schema details, optional controlled read-only SQL console |
 | SQL execution feed and query statistics | Available; SQLiteDriver wrapper | Query plans; separately labelled subscription heuristic |
 | Socket frames and connection history | Available; host-instrumented passive hooks | Optional transport adapters, not app-specific channel enums |

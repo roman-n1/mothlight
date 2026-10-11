@@ -6,6 +6,7 @@ android {
         applicationId = "io.github.mothlight.sample.android"
         minSdk = 23
         targetSdk = 36
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         versionCode = 1
         versionName = "0.1.0"
     }
@@ -18,6 +19,12 @@ android {
     }
 }
 dependencies {
+    androidTestImplementation("androidx.test:runner:1.7.0")
+    androidTestImplementation("androidx.test.ext:junit:1.3.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+    testImplementation(kotlin("test-junit"))
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     implementation(project(":mothlight-shark"))
     implementation(project(":mothlight-room"))
     implementation("androidx.sqlite:sqlite-bundled:2.7.0")
@@ -27,3 +34,5 @@ dependencies {
     implementation("androidx.activity:activity:1.13.0")
     implementation("com.squareup.retrofit2:retrofit:3.0.0")
 }
+
+ksp { arg("room.schemaLocation", "$projectDir/schemas") }

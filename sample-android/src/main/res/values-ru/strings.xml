@@ -4,4 +4,23 @@
     <string name="release_object">Освободить демообъект</string>
     <string name="demo_object">Демообъект</string>
     <string name="demo_reason">Время жизни демообъекта истекло; пример намеренно хранит ссылку</string>
+    <string name="weather_title">Погода с Mothlight</string>
+    <string name="weather_city">Город</string>
+    <string name="weather_refresh">Обновить</string>
+    <string name="weather_ready">Выберите город и обновите погоду. Ниже доступны HTTP, база, SQL и логи.</string>
+    <string name="weather_empty">Сохранённых наблюдений пока нет.</string>
+    <string name="weather_loading">Загружаем погоду…</string>
+    <string name="weather_saved">Погода сохранена в Room. История останется после перезапуска.</string>
+    <string name="weather_network_failed">Не удалось загрузить погоду. Сохранённая история остаётся доступной.</string>
+    <string name="weather_storage_failed">База недоступна. Обновление не сохранено.</string>
+    <string name="weather_reading">%1$s: %2$.1f °C · %3$.1f км/ч · %4$s</string>
+    <string name="weather_attribution">Погодные данные: Open-Meteo.com · CC BY 4.0</string>
+    <string name="weather_logs">Записать тестовый лог</string>
+    <string name="weather_diagnostics">Другие инструменты</string>
+    <string name="city_lisbon">Лиссабон</string>
+    <string name="city_tokyo">Токио</string>
+    <string name="city_novosibirsk">Новосибирск</string>
+    <string name="logcat_reading">Logcat: слушаем MothlightWeather</string>
+    <string name="logcat_stopped">Logcat: остановлен</string>
+    <string name="logcat_unavailable">Logcat недоступен на устройстве. Выключите и включите запись для повтора.</string>
 </resources>
