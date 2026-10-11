@@ -14,7 +14,7 @@ import io.ktor.utils.io.charsets.Charsets
 import io.ktor.utils.io.core.readText
 import io.ktor.utils.io.readAvailable
 import io.ktor.utils.io.rethrowCloseCauseIfNeeded
-import io.ktor.util.InternalAPI
+import io.ktor.utils.io.InternalAPI
 import kotlinx.io.Buffer
 import kotlinx.coroutines.CancellationException
 import io.ktor.util.AttributeKey
