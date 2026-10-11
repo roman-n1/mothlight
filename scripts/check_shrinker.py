@@ -48,6 +48,10 @@ def check_artifacts():
         for archive in archives:
             with zipfile.ZipFile(archive) as aar:
                 assert "proguard.txt" in aar.namelist(), f"{archive}: missing consumer rules"
+                if name == "compose":
+                    for locale in ("values", "values-ru"):
+                        resource = f"assets/composeResources/io.github.mothlight.compose.resources/{locale}/strings.commonMain.cvr"
+                        assert resource in aar.namelist(), f"{archive}: missing {locale} Compose strings"
                 rules = aar.read("proguard.txt").decode()
                 assert "ProcessMemoryApi" not in rules, f"{archive}: JVM-only JNA rules leaked to Android"
     jars = list((ROOT / "mothlight-memory/build/libs").glob("*-jvm-*.jar"))
@@ -74,6 +78,10 @@ def check_artifacts():
     assert "io.github.mothlight.sample.android.MainActivity: java.lang.Object heldObject" in seeds, "Demo keep rule did not match"
     apks = list((ROOT / "sample-android/build/outputs/apk/release").glob("*.apk"))
     assert len(apks) == 1, "Expected one release APK to inspect"
+    with zipfile.ZipFile(apks[0]) as apk:
+        for locale in ("values", "values-ru"):
+            resource = f"assets/composeResources/io.github.mothlight.compose.resources/{locale}/strings.commonMain.cvr"
+            assert resource in apk.namelist(), f"Release APK: missing {locale} Compose strings"
     analyzer = shutil.which("apkanalyzer")
     if analyzer is None:
         sdk = Path(os.environ["ANDROID_HOME"])

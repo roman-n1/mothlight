@@ -17,7 +17,7 @@ Its run history is the source of truth for the current commit's pass/fail status
 | SQLite | Real bundled SQLite tests on JVM and iOS simulator: bounded/masked pages, identifier rejection, tracing, statement reuse and errors |
 | Room 2 / Room 3 | Real generated JVM databases: DAO writes invalidate and refresh the observed page |
 | Desktop | Room 3 sample Kotlin/JVM compilation |
-| Android | Native Views + Retrofit + Room 2 sample debug APK and release APK with R8 enabled |
+| Android | Native Views weather sample debug/release R8 builds; JVM repository, HTTP and Logcat lifecycle tests; API 29 emulator verifies persistent Room, invalidations, SQL capture and bounded history |
 | iOS | Core, SQLite and Ktor tests in the arm64 simulator; Compose, Ktor and both Room adapters compiled for the simulator |
 | Web | Core and Ktor runtime tests in Node on JS and Wasm, plus Compose and Ktor compilation |
 | Shrinking | Reflection guard and consumer files packaged in all Android AARs; actual R8 renaming and preserved demo root checked from release mapping |
@@ -83,6 +83,16 @@ can be consumed by a native Android project. The network module has no UI depend
   an explicit executor-contract failure was expected. Both are covered by the
   null-free migration's checks and tests.
 
+- Weather sample and Logcat acceptance tests first failed against inert implementations:
+  5 Logcat failures and 3 repository failures (the offline-preservation case already
+  passed). The implemented path passes without changing those assertions.
+
+- The first weather Activity emulator run reproduced a real `MissingResourceException`:
+  the Android target had not enabled Compose resource packaging. Android resources
+  are now enabled in the library, and artifact checks require EN/RU strings in both
+  the Compose AAR and the minified sample APK. The Activity test covers startup and
+  recreation on API 29, while the separate database test covers disk persistence.
+
 ## Failure-injection regression tests
 
 [Stability boundaries](stability.md) documents fallback and cancellation contracts.
@@ -94,8 +104,9 @@ These tests run inside required CI jobs; job timeouts bound stuck runs.
 
 ## Limits
 
-No Android device/emulator UI smoke, iOS panel rendering, browser runtime smoke,
-or Desktop visual smoke has been performed. Compilation does not establish UI or
+No physical Android device smoke, iOS panel rendering, browser runtime smoke,
+or Desktop visual smoke has been performed. The API 29 weather Activity startup/
+recreation check is automated; interactive weather flows still need manual smoke. Compilation does not establish UI or
 network behavior on those devices. iOS device arm64 is declared but only the simulator
 variant is compiled in the current CI.
 

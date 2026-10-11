@@ -36,7 +36,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - run: python3 scripts/check_resources.py
       - run: python3 scripts/check_shrinker.py
-      - run: ./gradlew :mothlight-core:jvmTest :mothlight-memory:jvmTest :mothlight-retention:jvmTest :mothlight-shark:jvmTest :mothlight-sqlite:jvmTest :mothlight-room:jvmTest :mothlight-room3:jvmTest :mothlight-compose:jvmTest :mothlight-ktor:jvmTest :mothlight-okhttp:jvmTest :sample-desktop:classes :sample-android:assembleDebug :sample-android:assembleRelease --continue
+      - run: ./gradlew :mothlight-core:jvmTest :mothlight-memory:jvmTest :mothlight-retention:jvmTest :mothlight-shark:jvmTest :mothlight-sqlite:jvmTest :mothlight-room:jvmTest :mothlight-room3:jvmTest :mothlight-compose:jvmTest :mothlight-ktor:jvmTest :mothlight-okhttp:jvmTest :sample-desktop:classes :mothlight-android:testDebugUnitTest :sample-android:testDebugUnitTest :sample-android:assembleDebug :sample-android:assembleRelease --continue
       - name: Package consumer rules
         run: ./gradlew :mothlight-core:bundleAndroidMainAar :mothlight-compose:bundleAndroidMainAar :mothlight-ktor:bundleAndroidMainAar :mothlight-memory:bundleAndroidMainAar :mothlight-retention:bundleAndroidMainAar :mothlight-shark:bundleAndroidMainAar :mothlight-room:bundleAndroidMainAar :mothlight-room3:bundleAndroidMainAar :mothlight-sqlite:bundleAndroidMainAar :mothlight-okhttp:bundleAndroidMainAar :mothlight-android:bundleReleaseAar :mothlight-memory:jvmJar :mothlight-retention:jvmJar
       - run: python3 scripts/check_shrinker.py --artifacts
@@ -97,3 +97,38 @@ jobs:
           path: |
             mothlight-memory/build/test-results/
             mothlight-retention/build/test-results/
+
+  android-database:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
+      - run: sdkmanager 'platforms;android-37.0' 'build-tools;36.0.0'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          arch: x86_64
+          disable-animations: true
+          script: ./gradlew :sample-android:connectedDebugAndroidTest --console=plain
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-database-test-results
+          path: |
+            sample-android/build/reports/androidTests/
+            sample-android/build/outputs/androidTest-results/
+            sample-android/build/outputs/connected_android_test_additional_output/

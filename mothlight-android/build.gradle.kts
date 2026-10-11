@@ -8,6 +8,8 @@ android {
     publishing { singleVariant("release") { withSourcesJar() } }
 }
 dependencies {
+    testImplementation(kotlin("test-junit"))
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
     api(project(":mothlight-compose"))
     implementation("org.jetbrains.compose.material3:material3:1.9.0")
 }

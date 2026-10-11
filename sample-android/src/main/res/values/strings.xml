@@ -4,4 +4,25 @@
     <string name="release_object">Release demo object</string>
     <string name="demo_object">Demo object</string>
     <string name="demo_reason">Demo lifetime ended; sample deliberately holds a reference</string>
+    <string name="weather_title">Mothlight Weather</string>
+    <string name="weather_city">City</string>
+    <string name="weather_refresh">Refresh</string>
+    <string name="weather_ready">Choose a city and refresh. Inspect HTTP, Database, SQL and Logs below.</string>
+    <string name="weather_empty">No saved weather yet.</string>
+    <string name="weather_loading">Requesting weather…</string>
+    <string name="weather_saved">Weather saved to Room. History survives app restarts.</string>
+    <string name="weather_network_failed">Could not load weather. Saved history is still available.</string>
+    <string name="weather_storage_failed">Database unavailable. This update was not saved.</string>
+    <string name="weather_reading">%1$s: %2$.1f °C · %3$.1f km/h · %4$s</string>
+    <string name="weather_attribution">Weather data by Open-Meteo.com · CC BY 4.0</string>
+    <string name="weather_logs">Write test log</string>
+    <string name="weather_diagnostics">More diagnostics</string>
+    <string name="city_lisbon">Lisbon</string>
+    <string name="city_tokyo">Tokyo</string>
+    <string name="city_novosibirsk">Novosibirsk</string>
+    <string name="logcat_reading">Logcat: listening to MothlightWeather</string>
+    <string name="logcat_stopped">Logcat: stopped</string>
+    <string name="logcat_unavailable">Logcat unavailable on this device. Toggle recording to retry.</string>
+    <string name="weather_expand_panel">Expand inspector</string>
+    <string name="weather_show_weather">Show weather</string>
 </resources>

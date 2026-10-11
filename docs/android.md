@@ -79,3 +79,39 @@ keep debug wiring out of release variants.
 See [verification](verification.md) for build/device status.
 
 See [minification](minification.md) for the shared consumer rules and automated AAR/R8 verification.
+
+## Android Logcat
+
+`mothlight-android` can read the current process's main Logcat buffer. It does not
+request `READ_LOGS`, root access or logs from other applications. Android/device
+restrictions can still make the reader unavailable.
+
+```kotlin
+import io.github.mothlight.android.captureLogcat
+
+val capture = captureLogcat(
+    scope = screenScope,
+    mothlight = mothlight,
+    tags = setOf("MyApp"),
+    sanitize = { message -> scrubApplicationSecrets(message) },
+)
+// Observe capture.status: STOPPED, READING or UNAVAILABLE.
+// When this owner stops:
+capture.close()
+```
+
+The sanitizer is required; HTTP redaction does not sanitize free-text logs.
+An empty tag set accepts all tags from this process. Entries have unique IDs and
+use the existing bounded Logs feed; messages are capped at 4,000 characters.
+Verbose maps to DEBUG, Fatal to ERROR. Non-record lines are ignored; multiline
+messages appear as separate Logcat records. Capture starts from the last buffered
+line, so this is a live view, not a complete historical export.
+
+Disabling Mothlight terminates the reader; re-enabling starts a new one. Cancelling
+the owner scope or calling `close()` terminates capture permanently. An unavailable
+reader does not retry in a loop: toggle recording to retry. `READING` means the
+reader is active, not that every device log is available. No logging framework is
+required; `android.util.Log` works. For KMP or guaranteed delivery, use the direct
+`mothlight.logs.record(...)` API instead of relying on platform Logcat access.
+
+[Weather sample](weather-sample.md) connects all four tools in one native Activity.
