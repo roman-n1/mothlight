@@ -1,5 +1,6 @@
 package io.github.mothlight
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,10 +19,15 @@ object TransientMemoryOverlayStore : MemoryOverlayStore {
 
 /** One setting per Mothlight instance, independent of event recording. */
 class MemoryOverlaySettings(private val store: MemoryOverlayStore = TransientMemoryOverlayStore) {
-    private val state = MutableStateFlow(store.read())
+    private val state = MutableStateFlow(readStoredValue())
     val enabled: StateFlow<Boolean> = state.asStateFlow()
     fun setEnabled(value: Boolean) {
-        store.write(value)
+        try { store.write(value) }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) { /* Persistence is optional; keep the in-memory control usable. */ }
         state.value = value
     }
+    private fun readStoredValue(): Boolean = try { store.read() }
+    catch (cancelled: CancellationException) { throw cancelled }
+    catch (_: Exception) { false }
 }

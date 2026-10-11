@@ -61,7 +61,7 @@ class MothlightKtorTest {
         val channel = ByteChannel(autoFlush = true)
         val release = CompletableDeferred<Unit>()
         val received = CompletableDeferred<Unit>()
-        val prefix = "{\"data\":\"" + "a".repeat(64)
+        val prefix = "{\"data\":\"" + "a".repeat(24) // Exactly bodyLimit + 1 bytes, with no following bytes yet.
         val producer = launch {
             channel.writeStringUtf8(prefix)
             release.await()
