@@ -27,16 +27,16 @@ fun main() = application {
             val releaseLabel = stringResource(Res.string.release_object)
             DisposableEffect(demo) { onDispose { demo.close() } }
             val tools = remember(demo) {
-                MothlightTools(defaultMothlightTools(demo.mothlight).entries + databaseTool(demo.databaseSource) + retentionTool(demo.retentionWatcher, analyzer = demo.retentionAnalyzer) + MothlightTool(
-                    id = "example-plugin",
-                    title = { stringResource(Res.string.custom_tool) },
-                    content = { modifier ->
+                mothlightTools(demo.mothlight) {
+                    tool(databaseTool(demo.databaseSource))
+                    tool(retentionTool(demo.retentionWatcher, analyzer = demo.retentionAnalyzer))
+                    tab(id = "example-plugin", title = { stringResource(Res.string.custom_tool) }) { modifier ->
                         Column(modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             Text(stringResource(Res.string.plugin_description), style = MaterialTheme.typography.titleMedium)
                             Button(onClick = { demo.event() }) { Text(stringResource(Res.string.emit_event)) }
                         }
-                    },
-                ))
+                    }
+                }
             }
             Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)) {
