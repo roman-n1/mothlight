@@ -2,6 +2,7 @@ package io.github.mothlight.sample.android.weather
 
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.os.Build
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -11,6 +12,8 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.mothlight.sample.android.R
 import java.io.File
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,6 +39,16 @@ class WeatherScreenTest {
             val directory = output?.let(::File) ?: File(instrumentation.targetContext.getExternalFilesDir(null), "screenshots")
             directory.mkdirs()
             fun screenshot(name: String) {
+                if (Build.VERSION.SDK_INT >= 29) {
+                    val committed = CountDownLatch(1)
+                    scenario.onActivity { activity ->
+                        val root = activity.window.decorView
+                        // Wait for the rendered frame, not just a drained main-thread queue.
+                        root.viewTreeObserver.registerFrameCommitCallback { committed.countDown() }
+                        root.invalidate()
+                    }
+                    assertTrue("Screenshot frame was not committed", committed.await(10, TimeUnit.SECONDS))
+                }
                 val bitmap = instrumentation.uiAutomation.takeScreenshot()
                 assertNotNull(bitmap)
                 val file = File(directory, "$name.png")
