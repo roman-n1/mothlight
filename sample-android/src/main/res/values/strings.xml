@@ -23,4 +23,6 @@
     <string name="logcat_reading">Logcat: listening to MothlightWeather</string>
     <string name="logcat_stopped">Logcat: stopped</string>
     <string name="logcat_unavailable">Logcat unavailable on this device. Toggle recording to retry.</string>
+    <string name="weather_expand_panel">Expand inspector</string>
+    <string name="weather_show_weather">Show weather</string>
 </resources>

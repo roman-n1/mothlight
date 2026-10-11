@@ -23,4 +23,6 @@
     <string name="logcat_reading">Logcat: слушаем MothlightWeather</string>
     <string name="logcat_stopped">Logcat: остановлен</string>
     <string name="logcat_unavailable">Logcat недоступен на устройстве. Выключите и включите запись для повтора.</string>
+    <string name="weather_expand_panel">Развернуть инспектор</string>
+    <string name="weather_show_weather">Показать погоду</string>
 </resources>

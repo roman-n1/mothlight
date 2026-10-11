@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Button
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -31,15 +32,36 @@ class WeatherScreenTest {
             }
             val instrumentation = InstrumentationRegistry.getInstrumentation()
             instrumentation.waitForIdleSync()
-            val screenshot = instrumentation.uiAutomation.takeScreenshot()
-            assertNotNull(screenshot)
             val output = InstrumentationRegistry.getArguments().getString("additionalTestOutputDir")
             val directory = output?.let(::File) ?: File(instrumentation.targetContext.getExternalFilesDir(null), "screenshots")
             directory.mkdirs()
-            val file = File(directory, "weather.png")
-            file.outputStream().use { assertTrue(screenshot.compress(Bitmap.CompressFormat.PNG, 100, it)) }
-            instrumentation.sendStatus(2, Bundle().apply { putString("additionalTestOutputFile_weather", file.absolutePath) })
-            screenshot.recycle()
+            fun screenshot(name: String) {
+                val bitmap = instrumentation.uiAutomation.takeScreenshot()
+                assertNotNull(bitmap)
+                val file = File(directory, "$name.png")
+                file.outputStream().use { assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)) }
+                instrumentation.sendStatus(2, Bundle().apply { putString("additionalTestOutputFile_$name", file.absolutePath) })
+                bitmap.recycle()
+            }
+            screenshot("weather")
+            fun views(view: View): List<View> = listOf(view) + if (view is ViewGroup)
+                (0 until view.childCount).flatMap { views(view.getChildAt(it)) } else emptyList()
+            scenario.onActivity { activity ->
+                val all = views(activity.window.decorView)
+                val expand = all.filterIsInstance<Button>().single { it.text == activity.getString(R.string.weather_expand_panel) }
+                val refresh = all.filterIsInstance<Button>().single { it.text == activity.getString(R.string.weather_refresh) }
+                assertTrue(refresh.isShown)
+                expand.performClick()
+                assertFalse(refresh.isShown)
+                assertEquals(activity.getString(R.string.weather_show_weather), expand.text)
+            }
+            instrumentation.waitForIdleSync()
+            screenshot("inspector")
+            scenario.onActivity { activity ->
+                val all = views(activity.window.decorView)
+                all.filterIsInstance<Button>().single { it.text == activity.getString(R.string.weather_show_weather) }.performClick()
+                assertTrue(all.filterIsInstance<Button>().single { it.text == activity.getString(R.string.weather_refresh) }.isShown)
+            }
         }
     }
 }

@@ -39,6 +39,8 @@ class WeatherActivity : ComponentActivity() {
     private lateinit var refresh: Button
     private lateinit var city: Spinner
     private lateinit var capture: LogcatCapture
+    private lateinit var weatherDetails: LinearLayout
+    private lateinit var expandInspector: Button
     private var logcatJob: Job = Job().apply { complete() }
     private var refreshJob: Job = Job().apply { complete() }
 
@@ -65,6 +67,8 @@ class WeatherActivity : ComponentActivity() {
             }
         }
         layout.addView(TextView(this).apply { setText(R.string.weather_title); textSize = 22f })
+        weatherDetails = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        layout.addView(weatherDetails)
         val controls = LinearLayout(this)
         city = Spinner(this).apply {
             adapter = ArrayAdapter(this@WeatherActivity, android.R.layout.simple_spinner_dropdown_item,
@@ -74,12 +78,12 @@ class WeatherActivity : ComponentActivity() {
         controls.addView(city, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         refresh = Button(this).apply { setText(R.string.weather_refresh); setOnClickListener { refreshWeather() } }
         controls.addView(refresh)
-        layout.addView(controls)
+        weatherDetails.addView(controls)
         status = TextView(this).apply { setText(R.string.weather_ready) }
-        layout.addView(status)
+        weatherDetails.addView(status)
         val history = TextView(this).apply { setText(R.string.weather_empty); textSize = 16f }
-        layout.addView(history)
-        layout.addView(TextView(this).apply {
+        weatherDetails.addView(history)
+        weatherDetails.addView(TextView(this).apply {
             setText(R.string.weather_attribution)
             setTextColor(android.graphics.Color.rgb(70, 40, 120))
             setPadding(0, 8, 0, 8)
@@ -88,13 +92,18 @@ class WeatherActivity : ComponentActivity() {
         val actions = LinearLayout(this)
         actions.addView(Button(this).apply {
             setText(R.string.weather_logs)
-            setOnClickListener { Log.w("MothlightWeather", "demo_warning:user_requested"); panelState.selectTool("logs") }
+            setOnClickListener { Log.w("MothlightWeather", "demo_warning:user_requested"); panelState.selectTool("logs"); showInspector(true) }
         }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
         actions.addView(Button(this).apply {
             setText(R.string.weather_diagnostics)
             setOnClickListener { startActivity(Intent(this@WeatherActivity, MainActivity::class.java)) }
         }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        layout.addView(actions)
+        weatherDetails.addView(actions)
+        expandInspector = Button(this).apply {
+            setText(R.string.weather_expand_panel)
+            setOnClickListener { showInspector(weatherDetails.visibility == View.VISIBLE) }
+        }
+        layout.addView(expandInspector)
         logcatStatus = TextView(this)
         layout.addView(logcatStatus)
         layout.addView(createMemoryOverlayView(this, mothlight))
@@ -113,6 +122,10 @@ class WeatherActivity : ComponentActivity() {
                 }
             }
         }
+    }
+    private fun showInspector(expanded: Boolean) {
+        weatherDetails.visibility = if (expanded) View.GONE else View.VISIBLE
+        expandInspector.setText(if (expanded) R.string.weather_show_weather else R.string.weather_expand_panel)
     }
     private fun refreshWeather() {
         if (refreshJob.isActive) return

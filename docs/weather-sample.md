@@ -19,11 +19,12 @@ Novosibirsk, Lisbon and Tokyo. Controls follow English/Russian locale settings.
 
 1. Select a city and press **Refresh**. The app calls the real
    [Open-Meteo forecast API](https://open-meteo.com/en/docs) through Retrofit/OkHttp.
-2. Open **HTTP** in the embedded panel. Inspect the status and JSON response.
+2. Press **Expand inspector** for more space on small screens, then open **HTTP** in the embedded panel. Inspect the status and JSON response.
    Coordinates are query parameters; Mothlight removes the query string from its
    recorded URL. Requests have a 15-second timeout.
 3. Open **Database**, then `weather_readings`. Each successful refresh inserts an
    observation. Keep the table open across another refresh to see invalidation.
+   **Show weather** restores the controls without replacing the panel or its selected tab.
 4. Open **SQL** for the queries executed by the application's SQLite driver.
 5. Open **Logs** or press **Write test log**. `Log.i` reports refresh/save/failure
    labels; the button writes a warning. Only this app's `MothlightWeather` tag is
