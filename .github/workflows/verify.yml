@@ -123,9 +123,7 @@ jobs:
           api-level: 29
           arch: x86_64
           disable-animations: true
-          script: |
-            ./gradlew :sample-android:connectedDebugAndroidTest --console=plain
-            adb pull /sdcard/Android/data/io.github.mothlight.sample.android/files/screenshots/weather.png weather-screen.png
+          script: ./gradlew :sample-android:connectedDebugAndroidTest --console=plain
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -133,4 +131,4 @@ jobs:
           path: |
             sample-android/build/reports/androidTests/
             sample-android/build/outputs/androidTest-results/
-            weather-screen.png
+            sample-android/build/outputs/connected_android_test_additional_output/

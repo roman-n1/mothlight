@@ -1,6 +1,7 @@
 package io.github.mothlight.sample.android.weather
 
 import android.graphics.Bitmap
+import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -32,8 +33,12 @@ class WeatherScreenTest {
             instrumentation.waitForIdleSync()
             val screenshot = instrumentation.uiAutomation.takeScreenshot()
             assertNotNull(screenshot)
-            val directory = File(instrumentation.targetContext.getExternalFilesDir(null), "screenshots").apply { mkdirs() }
-            File(directory, "weather.png").outputStream().use { screenshot.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            val output = InstrumentationRegistry.getArguments().getString("additionalTestOutputDir")
+            val directory = output?.let(::File) ?: File(instrumentation.targetContext.getExternalFilesDir(null), "screenshots")
+            directory.mkdirs()
+            val file = File(directory, "weather.png")
+            file.outputStream().use { assertTrue(screenshot.compress(Bitmap.CompressFormat.PNG, 100, it)) }
+            instrumentation.sendStatus(2, Bundle().apply { putString("additionalTestOutputFile_weather", file.absolutePath) })
             screenshot.recycle()
         }
     }
