@@ -5,6 +5,7 @@ import androidx.sqlite.SQLiteDriver
 import androidx.sqlite.SQLiteStatement
 import io.github.mothlight.SqlTraceRecorder
 import kotlin.time.Clock
+import kotlinx.coroutines.CancellationException
 
 /** Passive wrapper. Bind calls go straight to the original statement; values are never copied. */
 class TracingSQLiteDriver(
@@ -23,9 +24,12 @@ private class TracingConnection(
     private val nowMillis: () -> Long,
 ) : SQLiteConnection by delegate {
     override fun prepare(sql: String): SQLiteStatement {
+        val timing = if (sql.startsWith(SqlTraceRecorder.PANEL_MARKER)) TraceTiming.Inactive else startTiming(enabled, nowMillis)
         val statement = delegate.prepare(sql)
-        if (!enabled() || sql.startsWith(SqlTraceRecorder.PANEL_MARKER)) return statement
-        return TracingStatement(statement, sql, recorder, nowMillis)
+        return when (timing) {
+            TraceTiming.Inactive -> statement
+            is TraceTiming.Started -> TracingStatement(statement, sql, recorder, nowMillis, timing)
+        }
     }
 }
 
@@ -34,8 +38,8 @@ private class TracingStatement(
     private val sql: String,
     private val recorder: SqlTraceRecorder,
     private val nowMillis: () -> Long,
+    private var timing: TraceTiming,
 ) : SQLiteStatement by delegate {
-    private var startedAt = nowMillis()
     private var stepped = false
     private var outcome: io.github.mothlight.SqlOutcome = io.github.mothlight.SqlOutcome.Succeeded
     override fun step(): Boolean {
@@ -47,18 +51,44 @@ private class TracingStatement(
         }
     }
     override fun reset() {
-        try { delegate.reset() } finally {
-            finish()
-            startedAt = nowMillis()
+        try { delegate.reset() } catch (failure: Throwable) {
+            stepped = false
+            outcome = io.github.mothlight.SqlOutcome.Succeeded
+            throw failure
         }
+        finish()
+        timing = startTiming({ true }, nowMillis)
     }
     override fun close() {
-        try { delegate.close() } finally { finish() }
+        try { delegate.close() } catch (failure: Throwable) {
+            stepped = false
+            outcome = io.github.mothlight.SqlOutcome.Succeeded
+            throw failure
+        }
+        finish()
     }
     private fun finish() {
         if (!stepped) return
-        recorder.record(sql, startedAt, nowMillis() - startedAt, outcome)
         stepped = false
+        val finishedOutcome = outcome
         outcome = io.github.mothlight.SqlOutcome.Succeeded
+        val started = timing
+        if (started !is TraceTiming.Started) return
+        try { recorder.record(sql, started.millis, nowMillis() - started.millis, finishedOutcome) }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) { /* Observation must not fail a completed database operation. */ }
     }
+}
+
+private sealed interface TraceTiming {
+    data object Inactive : TraceTiming
+    data class Started(val millis: Long) : TraceTiming
+}
+
+private fun startTiming(enabled: () -> Boolean, nowMillis: () -> Long): TraceTiming = try {
+    if (enabled()) TraceTiming.Started(nowMillis()) else TraceTiming.Inactive
+} catch (cancelled: CancellationException) {
+    throw cancelled
+} catch (_: Exception) {
+    TraceTiming.Inactive
 }

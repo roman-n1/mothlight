@@ -32,6 +32,26 @@ class MothlightInterceptorTest {
         assertEquals("***", tx.responseHeaders["set-cookie"] ?: tx.responseHeaders["Set-Cookie"])
         assertEquals(CapturedBody.Text("""{"token":"***","ok":true}"""), tx.responseBody)
     }
+    @Test fun brokenCaptureMetadataDoesNotReplaceSuccessfulResponse() {
+        val inspector = NetworkInspector(redactor = Redactor(captureJsonBodies = true))
+        inspector.setEnabled(true)
+        val body = object : ResponseBody() {
+            private val data = Buffer().writeUtf8("original")
+            override fun contentType(): MediaType = error("metadata unavailable")
+            override fun contentLength() = 8L
+            override fun source() = data
+        }
+        client(inspector) { response(it).newBuilder().body(body).build() }
+            .newCall(Request.Builder().url("https://example.test").build()).execute().use {
+                assertEquals(200, it.code)
+                assertSame(body, it.body)
+                assertEquals("original", it.body!!.source().readUtf8())
+            }
+        val tx = inspector.transactions.value.single()
+        assertIs<Status.Completed>(tx.status)
+        assertEquals(CapturedBody.NotCaptured, tx.responseBody)
+    }
+
     @Test fun disabledInterceptorStillReturnsResponseWithoutRecording() {
         val inspector = NetworkInspector()
         client(inspector) { response(it) }.newCall(Request.Builder().url("https://example.test").build()).execute().use {

@@ -213,8 +213,8 @@ val mothlight = Mothlight(redactor = Redactor(
 ```
 
 For streaming endpoints leave body capture disabled. Ktor's optional JSON observer
-may buffer a response before the stored body limit is applied. The OkHttp adapter
-uses a bounded peek and does not replay request bodies. A cURL export uses recorded,
+reads a bounded prefix; its underlying transport/observer may still buffer data.
+The OkHttp adapter uses a bounded peek. Neither adapter replays custom upload bodies. A cURL export uses recorded,
 redacted data; it is not an authenticated replay facility.
 
 ## What's inside
@@ -257,8 +257,8 @@ python3 scripts/check_resources.py
 ./gradlew :mothlight-core:jvmTest :mothlight-compose:jvmTest :mothlight-ktor:jvmTest :mothlight-okhttp:jvmTest
 ```
 
-See [architecture and extraction](docs/architecture.md), [Android](docs/android.md)
-and [verification](docs/verification.md).
+See [architecture and extraction](docs/architecture.md), [Android](docs/android.md),
+[stability boundaries](docs/stability.md) and [verification](docs/verification.md).
 
 ## Help bring the next bug to light
 

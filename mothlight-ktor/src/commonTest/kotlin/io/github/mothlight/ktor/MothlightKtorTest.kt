@@ -6,9 +6,13 @@ import io.ktor.client.engine.mock.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.http.content.*
 import kotlinx.coroutines.test.*
+import kotlinx.coroutines.*
+import io.ktor.utils.io.*
 import kotlin.test.*
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class MothlightKtorTest {
     @Test fun responseIsUnchangedAndCapturedSecretsAreMasked() = runTest {
         val inspector = NetworkInspector(redactor = Redactor(captureJsonBodies = true))
@@ -30,6 +34,66 @@ class MothlightKtorTest {
             assertEquals(CapturedBody.Text("""{"access_token":"***","items":[1,2]}"""), tx.responseBody)
         } finally { client.close() }
     }
+    @Test fun customByteArrayUploadIsReadOnlyByTransport() = runTest {
+        val inspector = NetworkInspector(redactor = Redactor(captureJsonBodies = true)).apply { setEnabled(true) }
+        var reads = 0
+        val upload = object : OutgoingContent.ByteArrayContent() {
+            override val contentType = ContentType.Application.Json
+            override fun bytes(): ByteArray {
+                reads++
+                check(reads == 1) { "upload replayed" }
+                return "{}".encodeToByteArray()
+            }
+        }
+        val client = HttpClient(MockEngine { request ->
+            assertEquals("{}", (request.body as OutgoingContent.ByteArrayContent).bytes().decodeToString())
+            respond("ok")
+        }) { installMothlight(inspector) }
+        try {
+            assertEquals("ok", client.post("https://example.test") { setBody(upload) }.bodyAsText())
+            assertEquals(1, reads)
+            assertEquals(CapturedBody.NotCaptured, inspector.transactions.value.single().requestBody)
+        } finally { client.close() }
+    }
+
+    @Test fun oversizedStreamCaptureFinishesBeforeTheStreamEnds() = runTest {
+        val inspector = NetworkInspector(redactor = Redactor(captureJsonBodies = true, bodyLimit = 32)).apply { setEnabled(true) }
+        val channel = ByteChannel(autoFlush = true)
+        val release = CompletableDeferred<Unit>()
+        val received = CompletableDeferred<Unit>()
+        val prefix = "{\"data\":\"" + "a".repeat(64)
+        val producer = launch {
+            channel.writeStringUtf8(prefix)
+            release.await()
+            channel.writeStringUtf8("\"}")
+            channel.close()
+        }
+        val engine = MockEngine(MockEngineConfig().apply {
+            dispatcher = StandardTestDispatcher(testScheduler)
+            addHandler { respond(channel, HttpStatusCode.OK, headersOf("Content-Type", "application/json")) }
+        })
+        val client = HttpClient(engine) { installMothlight(inspector) }
+        val request = async {
+            client.prepareGet("https://example.test").execute { response ->
+                received.complete(Unit)
+                release.await()
+                response.bodyAsText()
+            }
+        }
+        try {
+            received.await()
+            advanceUntilIdle()
+            assertEquals(CapturedBody.TooLarge, inspector.transactions.value.single().responseBody)
+            release.complete(Unit)
+            assertEquals(prefix + "\"}", request.await())
+        } finally {
+            release.complete(Unit)
+            producer.join()
+            request.cancelAndJoin()
+            client.close()
+        }
+    }
+
     @Test fun disabledPluginPreservesResponseAndRecordsNothing() = runTest {
         val inspector = NetworkInspector()
         val client = HttpClient(MockEngine { respond("original") }) { installMothlight(inspector) }
