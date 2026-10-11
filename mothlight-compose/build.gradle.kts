@@ -1,6 +1,7 @@
 plugins { id("com.android.kotlin.multiplatform.library"); kotlin("multiplatform"); kotlin("plugin.compose"); id("org.jetbrains.compose"); `maven-publish` }
 kotlin {
     android {
+        androidResources { enable = true }
         optimization {
             consumerKeepRules.apply {
                 publish = true
