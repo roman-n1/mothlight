@@ -158,23 +158,29 @@ clock semantics, bounded retention, sample redaction and interpretation limits.
 
 ## Extend it
 
-Own your data and actions in your app. Only the selected tool is composed; tools
-can collect their own flows and use their own localized resources.
+Add a tab for any of your own `@Composable` debug screens. The built-in tabs stay
+available; register ready-made tools with `tool(...)` in the same block:
 
 ```kotlin
-val tools = MothlightTools(
-    defaultMothlightTools(mothlight).entries + MothlightTool(
-        id = "my-database",
-        title = { stringResource(Res.string.database) },
-        content = { modifier -> MyDatabaseInspector(modifier) },
-    )
-)
+val tools = remember(mothlight, cache, databaseSource) {
+    mothlightTools(mothlight) {
+        tab(id = "my-cache", title = { stringResource(AppRes.string.debug_cache) }) { modifier ->
+            CacheDebugScreen(cache, modifier)
+        }
+        tool(databaseTool(databaseSource))
+    }
+}
 MothlightPanel(mothlight, tools = tools)
 ```
 
-Tool IDs must be nonblank and unique. Remember the `MothlightTools` instance in
-Compose to retain selection across recompositions. Do not launch work from a tool
-constructor; tie it to the tool's composition or your explicitly owned lifecycle.
+Import `io.github.mothlight.compose.mothlightTools`. `CacheDebugScreen`, `cache`,
+`databaseSource` and `AppRes` belong to your app. Include captured dependencies in
+the `remember` keys. No plugin interface, reflection or global registration is needed.
+
+Only the selected tab's content is composed. Tool IDs must be nonblank and unique,
+including against built-in tabs. Keep the tool set with `remember` and scope data
+collection to the tab's composition. See [custom Compose tabs](docs/custom-tools.md)
+for existing functions without a `Modifier`, localization, state and native Android.
 
 Record logs or diagnostic events through the core API:
 
