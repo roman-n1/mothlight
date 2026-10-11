@@ -31,10 +31,34 @@ class Redactor(
     fun body(value: String): CapturedBody {
         if (!captureJsonBodies) return CapturedBody.NotCaptured
         // Do not parse or retain oversized/non-JSON content. Truncating before masking can expose secrets.
-        if (value.length > bodyLimit) return CapturedBody.TooLarge
-        val element = runCatching { Json.parseToJsonElement(value) }.getOrElse { return CapturedBody.NotJson }
+        if (value.length > bodyLimit || exceedsDepthLimit(value)) return CapturedBody.TooLarge
+        val element = try { Json.parseToJsonElement(value) }
+        catch (_: IllegalArgumentException) { return CapturedBody.NotJson }
         if (element !is JsonObject && element !is JsonArray) return CapturedBody.NotJson
         return CapturedBody.Text(scrub(element).toString())
+    }
+    // Bound recursion before the JSON parser, scrubber and serializer see untrusted input.
+    // Brackets inside quoted strings are data, including strings with escaped quotes.
+    private fun exceedsDepthLimit(value: String): Boolean {
+        var depth = 0
+        var quoted = false
+        var escaped = false
+        for (character in value) {
+            if (quoted) {
+                when {
+                    escaped -> escaped = false
+                    character == '\\' -> escaped = true
+                    character == '"' -> quoted = false
+                }
+            } else {
+                when (character) {
+                    '"' -> quoted = true
+                    '[', '{' -> { depth++; if (depth > 64) return true }
+                    ']', '}' -> depth--
+                }
+            }
+        }
+        return false
     }
     private fun scrub(element: JsonElement): JsonElement = when (element) {
         is JsonObject -> JsonObject(element.mapValues { (key, value) ->

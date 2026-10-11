@@ -10,6 +10,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   null-contracts:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,6 +20,7 @@ jobs:
       - run: python -m unittest discover -s scripts/tests -v
       - run: python scripts/check_null_contracts.py
   jvm-android:
+    timeout-minutes: 40
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -47,6 +49,7 @@ jobs:
             **/build/test-results/
             sample-android/build/outputs/mapping/release/
   multiplatform:
+    timeout-minutes: 40
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -60,7 +63,9 @@ jobs:
           log-accepted-android-sdk-licenses: false
       - run: sdkmanager 'platforms;android-37.0' 'build-tools;36.0.0'
       - uses: gradle/actions/setup-gradle@v4
-      - run: ./gradlew :mothlight-core:iosSimulatorArm64Test :mothlight-memory:iosSimulatorArm64Test :mothlight-retention:iosSimulatorArm64Test :mothlight-sqlite:iosSimulatorArm64Test :mothlight-room:compileKotlinIosSimulatorArm64 :mothlight-room3:compileKotlinIosSimulatorArm64 :mothlight-compose:compileKotlinIosSimulatorArm64 :mothlight-ktor:compileKotlinIosSimulatorArm64 :mothlight-compose:compileKotlinJs :mothlight-compose:compileKotlinWasmJs :mothlight-ktor:compileKotlinJs :mothlight-ktor:compileKotlinWasmJs --continue
+      - run: ./gradlew :mothlight-core:iosSimulatorArm64Test :mothlight-memory:iosSimulatorArm64Test :mothlight-retention:iosSimulatorArm64Test :mothlight-sqlite:iosSimulatorArm64Test :mothlight-ktor:iosSimulatorArm64Test :mothlight-room:compileKotlinIosSimulatorArm64 :mothlight-room3:compileKotlinIosSimulatorArm64 :mothlight-compose:compileKotlinIosSimulatorArm64 :mothlight-ktor:compileKotlinIosSimulatorArm64 :mothlight-compose:compileKotlinJs :mothlight-compose:compileKotlinWasmJs :mothlight-ktor:compileKotlinJs :mothlight-ktor:compileKotlinWasmJs --continue
+      - name: Execute web runtime contracts
+        run: ./gradlew :mothlight-core:jsNodeTest :mothlight-core:wasmJsNodeTest :mothlight-ktor:jsNodeTest :mothlight-ktor:wasmJsNodeTest --continue
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -70,6 +75,7 @@ jobs:
             **/build/test-results/
 
   windows-memory:
+    timeout-minutes: 20
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4

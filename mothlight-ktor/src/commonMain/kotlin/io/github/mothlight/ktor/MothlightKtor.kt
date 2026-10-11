@@ -7,8 +7,16 @@ import io.ktor.client.plugins.api.Send
 import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.client.plugins.observer.ResponseObserver
 import io.ktor.client.request.HttpRequestBuilder
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.content.OutgoingContent
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.content.TextContent
+import io.ktor.http.charset
+import io.ktor.utils.io.charsets.Charsets
+import io.ktor.utils.io.core.readText
+import io.ktor.utils.io.readAvailable
+import io.ktor.utils.io.rethrowCloseCauseIfNeeded
+import io.ktor.utils.io.InternalAPI
+import kotlinx.io.Buffer
+import kotlinx.coroutines.CancellationException
 import io.ktor.util.AttributeKey
 import io.ktor.util.date.getTimeMillis
 
@@ -52,7 +60,7 @@ fun HttpClientConfig<*>.installMothlight(inspector: NetworkInspector) {
             }
             onResponse { response ->
                 val id = response.call.request.attributes.getOrNull(TransactionIdKey) ?: return@onResponse
-                val body = response.bodyAsText()
+                val body = captureResponseBody(response, inspector.redactor.bodyLimit)
                 inspector.recordSuccess(id, response.status.value,
                     response.headers.entries().associate { (name, values) -> name to values.joinToString(", ") },
                     body, getTimeMillis())
@@ -62,6 +70,31 @@ fun HttpClientConfig<*>.installMothlight(inspector: NetworkInspector) {
 }
 private val TransactionIdKey = AttributeKey<String>("Mothlight.transactionId")
 private fun extractBody(request: HttpRequestBuilder): CapturedBody = when (val body = request.body) {
-    is OutgoingContent.ByteArrayContent -> CapturedBody.Text(body.bytes().decodeToString())
+    // TextContent is already materialized; arbitrary bytes() implementations may be one-shot.
+    is TextContent -> CapturedBody.Text(body.text)
     else -> CapturedBody.NotCaptured
+}
+
+@OptIn(InternalAPI::class)
+private suspend fun captureResponseBody(response: HttpResponse, limit: Int): CapturedBody = try {
+    // WHY: bodyAsChannel starts a copying coroutine. Returning early would let
+    // ResponseObserver drain the same source concurrently. Use its isolated copy directly.
+    val channel = response.rawContent
+    val chunk = ByteArray(minOf(limit, 8192))
+    Buffer().use { packet ->
+        var remaining = limit.toLong() + 1
+        while (remaining > 0) {
+            val read = channel.readAvailable(chunk, 0, minOf(chunk.size.toLong(), remaining).toInt())
+            if (read < 0) break
+            packet.write(chunk, 0, read)
+            remaining -= read
+        }
+        channel.rethrowCloseCauseIfNeeded()
+        if (packet.size > limit) CapturedBody.TooLarge
+        else CapturedBody.Text(packet.readText(response.charset() ?: Charsets.UTF_8))
+    }
+} catch (cancelled: CancellationException) {
+    throw cancelled
+} catch (_: Exception) {
+    CapturedBody.NotCaptured
 }

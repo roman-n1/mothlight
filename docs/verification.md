@@ -12,14 +12,14 @@ Its run history is the source of truth for the current commit's pass/fail status
 | Retention | Common observation and analysis lifecycle tests; JVM concurrent registration/key retry; iOS real released-versus-rooted weak references |
 | Shark | Real HotSpot dumps: marker IDs, rooted path, duplicate watches, independent sessions and released control; synthetic weak-only vs strong graph; corrupt/oversized/cancelled capture cleanup |
 | Memory | Virtual-time start/stop/cancellation/recovery tests; live JVM heap, Linux resident readings and explicit Windows process unavailability; iOS physical footprint test |
-| Ktor | 4 JVM tests through MockEngine: response preservation, masking, disabled capture, error transparency |
-| OkHttp / Retrofit | 5 JVM tests through real OkHttp/Retrofit pipelines with a terminal mock transport |
+| Ktor | MockEngine contracts on JVM, iOS, JS and Wasm: response preservation, masking, disabled capture, error transparency, one-shot upload and bounded streaming capture |
+| OkHttp / Retrofit | Real OkHttp/Retrofit pipelines with a terminal mock transport, including failed capture metadata |
 | SQLite | Real bundled SQLite tests on JVM and iOS simulator: bounded/masked pages, identifier rejection, tracing, statement reuse and errors |
 | Room 2 / Room 3 | Real generated JVM databases: DAO writes invalidate and refresh the observed page |
 | Desktop | Room 3 sample Kotlin/JVM compilation |
 | Android | Native Views + Retrofit + Room 2 sample debug APK and release APK with R8 enabled |
-| iOS | Core and SQLite tests in the arm64 simulator; Compose, Ktor and both Room adapters compiled for the simulator |
-| Web | Compose and Ktor compilation for JS and Wasm, including core dependencies |
+| iOS | Core, SQLite and Ktor tests in the arm64 simulator; Compose, Ktor and both Room adapters compiled for the simulator |
+| Web | Core and Ktor runtime tests in Node on JS and Wasm, plus Compose and Ktor compilation |
 | Shrinking | Reflection guard and consumer files packaged in all Android AARs; actual R8 renaming and preserved demo root checked from release mapping |
 | Localization | Complete English/Russian keys and matching formatting arguments |
 
@@ -82,6 +82,15 @@ can be consumed by a native Android project. The network module has no UI depend
   The SQLite malformed-count test first failed with `NullPointerException` where
   an explicit executor-contract failure was expected. Both are covered by the
   null-free migration's checks and tests.
+
+## Failure-injection regression tests
+
+[Stability boundaries](stability.md) documents fallback and cancellation contracts.
+The suite injects failed preference storage, failed database subscription setup,
+SQLite gate/clock/recorder failures, broken response metadata, one-shot Ktor uploads,
+and a JSON stream held open after exceeding its capture limit. JSON nesting limits
+are tested at the accepted/rejected boundary and with escaped quotes in string data.
+These tests run inside required CI jobs; job timeouts bound stuck runs.
 
 ## Limits
 
