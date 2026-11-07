@@ -75,12 +75,6 @@ Headless consumers may use the `mothlight-memory` module and collect
 `observeMemory(settings, source)` with their own scope. Each collector owns its
 polling; mount one overlay per host window to avoid duplicate reads.
 
-Pass `retention = RetentionOverlay.Visible(watcher, RetentionAction.OpenTool { /* open tool */ })` to add a live
-[retained-object badge and tool](retention.md). The tool supports an explicit GC
-request; ordinary memory sampling never forces GC. Android/JVM heap analysis is
-available through the separate Shark adapter. See the [analysis proposal](leak-detection-design.md)
-for the remaining native analysis work. The original application's own settings are unchanged.
-
 ## Platform dependencies
 
 The module has no JNA dependency or reflective native binding. Android calls are

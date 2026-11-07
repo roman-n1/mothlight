@@ -1,11 +1,9 @@
 package io.github.mothlight.compose
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -23,7 +21,6 @@ fun MemoryUsageOverlay(
     modifier: Modifier = Modifier,
     source: MemorySource = PlatformMemorySource,
     dispatcher: CoroutineDispatcher = Dispatchers.Default,
-    retention: RetentionOverlay = RetentionOverlay.Hidden,
 ) {
     val enabled by mothlight.memoryOverlay.enabled.collectAsState()
     if (enabled == false) return
@@ -34,10 +31,6 @@ fun MemoryUsageOverlay(
     val presentation = remember(snapshot) { memoryPresentation(snapshot) }
     Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
         MemoryBadge(presentation)
-        when (retention) {
-            RetentionOverlay.Hidden -> Unit
-            is RetentionOverlay.Visible -> RetentionBadge(retention.watcher, retention.action)
-        }
     }
 }
 
@@ -45,11 +38,16 @@ fun MemoryUsageOverlay(
 @Composable
 private fun MemoryBadge(presentation: MemoryPresentation, modifier: Modifier = Modifier) {
     val color = when (presentation.pressure) {
-        MemoryPressure.NEUTRAL -> Color(0xE6202530)
-        MemoryPressure.ELEVATED -> Color(0xE67A5C00)
-        MemoryPressure.HIGH -> Color(0xE6B00020)
+        MemoryPressure.NEUTRAL -> MaterialTheme.colorScheme.surfaceVariant
+        MemoryPressure.ELEVATED -> MaterialTheme.colorScheme.tertiaryContainer
+        MemoryPressure.HIGH -> MaterialTheme.colorScheme.errorContainer
     }
-    Surface(modifier, shape = RoundedCornerShape(6.dp), color = color, contentColor = Color.White) {
+    val contentColor = when (presentation.pressure) {
+        MemoryPressure.NEUTRAL -> MaterialTheme.colorScheme.onSurfaceVariant
+        MemoryPressure.ELEVATED -> MaterialTheme.colorScheme.onTertiaryContainer
+        MemoryPressure.HIGH -> MaterialTheme.colorScheme.onErrorContainer
+    }
+    Surface(modifier, shape = MaterialTheme.shapes.small, color = color, contentColor = contentColor) {
         FlowRow(Modifier.padding(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             if (presentation.rows.isEmpty()) {
                 Text(stringResource(Res.string.memory_unavailable), style = MaterialTheme.typography.labelSmall)

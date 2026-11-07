@@ -57,6 +57,32 @@ compiler plugin. It does include the Compose runtime transitively.
 Java callers can use `MothlightViews.createMothlightView(context, mothlight)`.
 Compose apps can use `MothlightPanel` directly and supply their own `MaterialTheme`.
 
+## Application theme
+
+`MothlightPanel`, the memory overlay and grouped custom tools read the surrounding
+Material 3 colors, typography and shapes. They do not install an internal theme.
+Put the panel inside your application's existing theme, and changes to that theme
+propagate while the panel is open.
+
+A View factory creates a separate Compose root; it cannot inherit a Compose theme
+from another root or convert an arbitrary XML theme automatically. If your host
+has a Compose theme, pass it to both factories from a module with the Compose
+compiler plugin:
+
+```kotlin
+val panel = createMothlightView(context, mothlight, theme = { content ->
+    AppTheme { content() }
+})
+val overlay = createMemoryOverlayView(context, mothlight, theme = { content ->
+    AppTheme { content() }
+})
+```
+
+`AppTheme` is the host's theme, including its observed light/dark setting. For a
+Views-only host, a small Compose integration module can expose these pre-themed
+factories; Activities and Fragments still need no composables. Existing callers
+without a theme callback use Material 3 colors that follow the system light or dark theme.
+
 ## Locale
 
 The panel follows the application's Compose resource environment. English is the

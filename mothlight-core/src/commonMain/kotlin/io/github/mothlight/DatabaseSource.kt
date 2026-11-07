@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.emitAll
 interface DatabaseSource {
     suspend fun tables(): List<String>
     suspend fun page(table: String, limit: Int, offset: Int): DatabasePage
+    suspend fun schema(table: String): DatabaseSchema = DatabaseSchema.Unsupported
     fun changes(): Flow<Unit>
 }
 
@@ -22,4 +23,5 @@ class DatabaseBrowser(private val source: DatabaseSource) {
     private fun changes(): Flow<Unit> = flow { emitAll(source.changes()) }
     fun tables(): Flow<List<String>> = changes().map { source.tables() }
     fun page(table: String, limit: Int = 50, offset: Int = 0): Flow<DatabasePage> = changes().map { source.page(table, limit, offset) }
+    fun schema(table: String): Flow<DatabaseSchema> = changes().map { source.schema(table) }
 }

@@ -10,11 +10,10 @@
 **Bring bugs to light.**
 
 An extensible, in-app developer panel for **Kotlin Multiplatform and native Android**.
-Inspect network traffic, browse live database rows, follow realtime events and
+Inspect network traffic, browse live database rows, read logs and
 watch memory — inside the app you're debugging.
 
-A request failed. A row changed, but the screen didn't. An object outlived its
-screen. Mothlight brings the evidence into view so you can follow what happened.
+A request failed. A row changed, but the screen didn't. Startup took longer than expected. Mothlight brings the evidence into view so you can follow what happened.
 The lantern is your debug panel; the moths are the bugs coming into the light.
 
 [Try the demo](#try-it) · [Add to your app](#use-from-source) ·
@@ -50,8 +49,7 @@ samples and generated code are outside the rule. See the
 | --- | --- |
 | **What went over the wire?** | Inspect HTTP traffic through Ktor or OkHttp/Retrofit, with redacted headers and optional JSON capture. |
 | **What's really in the database?** | Browse live Room 2/3 table pages and trace SQLite execution. |
-| **What happened between updates?** | Inspect realtime frames reported by your transport hooks, alongside logs and diagnostic events. |
-| **How did the app get here?** | Record startup milestones, lifecycle transitions, navigation breadcrumbs and invariant counters through typed host hooks. |
+| **How did the app get here?** | Record startup milestones through explicit host hooks. |
 | **Where is memory going?** | Keep platform memory readings visible over the app and inspect objects that outlive their expected lifetime. |
 | **What does my app need to explain?** | Add your own tools and localized tabs through the panel's plugin API. |
 
@@ -61,20 +59,11 @@ samples and generated code are outside the rule. See the
   the core has no Compose dependency. No Decompose or DI framework is required.
 - **Use it in native Android, too.** View factories fit Activities and Fragments;
   the OkHttp adapter works with Retrofit. Your app needs no Compose source or compiler plugin.
-- **Keep control of capture.** Event recording starts disabled, buffers are bounded,
+- **Keep control of capture.** Recording starts disabled, buffers are bounded,
   and each instance belongs to your app. No upload endpoint or telemetry service is included.
-- **Extend it with your own knowledge.** Connect your app's lifecycle and transports,
-  then add tools for the behavior only your app understands.
+- **Extend it with your own knowledge.** Add host-owned screens for behavior only your app understands.
 - **Read it in English or Russian.** Library controls follow the app locale,
   with English as the fallback.
-
-Memory readings and retained-object observation are platform-dependent.
-**A retained object is a lead, not a confirmed leak.** Android/JVM and iOS can
-observe watched objects; iOS observation covers Kotlin objects, not the complete
-Swift/Objective-C graph. The optional Shark adapter captures Android/JVM heaps
-on demand and shows strong paths to watched objects. No iOS heap analyzer is
-supplied. See [retention](docs/retention.md),
-[memory](docs/memory.md) and [verification](docs/verification.md) for exact capabilities.
 
 ## Try it
 
@@ -87,11 +76,39 @@ Android minimum SDK: 23.
 ./gradlew :sample-android:assembleDebug
 ```
 
-Open the panel, inspect a synthetic request and explore the built-in tools.
-The retention demo deliberately holds an object: release it, then recheck its
-observation in the panel.
+The desktop sample is **Leaf (Лист)**, a small reading app. Refresh the feed,
+follow publications and save articles. Articles, subscriptions and bookmarks
+live in Room at `~/.mothlight-demo/reader.db` and survive restarts. The UI observes
+Room flows; refreshing the catalog preserves subscriptions and bookmarks.
 
-The samples use mock transports. They do not contact a backend or require credentials.
+Open **Debug panel** to inspect the HTTP requests, SQL and logs
+created by those actions. Drag the separator to resize the panel, or choose
+**Dock right / Dock bottom**. Each placement retains its size while the app runs.
+The host remains interactive alongside the panel.
+
+HTTP uses the Ktor CIO engine against the public [DEV API](https://developers.forem.com/api).
+The feed loads up to 10 articles each for design, Kotlin and web development,
+including author and description. **Read** opens the complete article text inside
+the app and requests `GET /api/articles/{id}` through the same instrumented Ktor
+client. The debug dock stays accessible beside the reader. Full text is cached in
+a separate Room table, survives feed refreshes and restarts, and remains visible
+if an update fails. The reader displays inert, selectable text with paragraph,
+list and code line breaks; embedded media is represented by available alt text.
+No API key is required. Requests have timeouts; failed refreshes leave the cached feed intact.
+JSON capture is capped at 128 KiB per response in this sample. Query parameters
+are redacted by Mothlight as usual.
+
+The Android sample still uses a mock transport. Desktop automated tests inject
+MockEngine for deterministic offline checks. To also run the live HTTPS smoke test:
+
+```shell
+MOTHLIGHT_LIVE_HTTP=1 ./gradlew :sample-desktop:test --rerun-tasks
+```
+
+Database migrations add author/source URL fields (version 2) and a separate full-text
+cache (version 3) without clearing saved articles
+or subscription choices. Unsaved synthetic articles are removed after the first
+successful live refresh; saved synthetic articles remain in Saved.
 
 Platform targets: Android, JVM, iOS arm64/simulator arm64, JS and Wasm. See
 [verification](docs/verification.md) for what was actually tested; declaring a target
@@ -129,6 +146,30 @@ fun DebugScreen() {
 }
 ```
 
+The panel and memory overlay inherit the surrounding Material 3 theme: colors,
+typography and shapes. Place them inside your app’s `MaterialTheme` to match the
+host UI. The desktop sample shares one theme between the host and the panel;
+use its light/dark toggle to switch both together.
+
+For a resizable embedded panel, keep the dock state in the host:
+
+```kotlin
+val dockState = remember { MothlightDockState() }
+MothlightDock(
+    visible = debugVisible,
+    modifier = Modifier.fillMaxSize(),
+    placement = MothlightDockPlacement.End, // Bottom for a horizontal split
+    state = dockState,
+    panel = { MothlightPanel(mothlight) },
+    content = { AppContent() },
+)
+```
+
+Import these types from `io.github.mothlight.compose`. `End` is the right side
+in left-to-right layouts and the left side in right-to-left layouts. The divider
+resizes the panel between 25% and 75% of the available space and exposes an
+accessibility progress action. Closing the dock does not disable recording.
+
 Imports: `io.github.mothlight.Mothlight`,
 `io.github.mothlight.ktor.installMothlight`, and
 `io.github.mothlight.compose.MothlightPanel`.
@@ -138,23 +179,26 @@ KMP nor Compose source code is required in a consuming Android app.
 Consumer rules are packaged automatically; see [minification](docs/minification.md)
 for Android R8 and Windows/JVM considerations.
 
-## Database and realtime
+## HTTP inspector
 
-The default panel includes SQL and realtime tools. Attach a Room database with
+For HTTP navigation, filtering, JSON node folding and copy actions, see the
+[HTTP inspector guide](docs/http-inspector.md).
+
+## Database and SQL
+
+The default panel includes the SQL tool. Attach a Room database with
 `databaseTool(RoomDatabaseSource(database))` to browse live table pages. See the
-[database and realtime guide](docs/database-and-realtime.md) for Room 2/3, SQLite
-tracing, native Android and transport hooks.
+[database and SQL guide](docs/database.md) for Room 2/3, SQLite
+tracing and native Android.
 
 The [extraction inventory](docs/extraction-roadmap.md) tracks other tools from the
 original panel and distinguishes shipped capabilities from remaining work.
 
-## Typed diagnostics
+## Startup milestones
 
-Startup, lifecycle, navigation and invariant tools are included in the default
-panel. Report milestones/transitions through `mothlight.startup`, `.lifecycle`,
-`.navigation` and `.invariants`. All are instance-owned and follow the recording
-gate. See the [diagnostic integration guide](docs/diagnostics.md) for host hooks,
-clock semantics, bounded retention, sample redaction and interpretation limits.
+The default panel includes a startup waterfall. Report milestones through
+`mothlight.startup.mark("database_ready", nowMillis)`. See the
+[startup guide](docs/diagnostics.md) for clock semantics and bounded history.
 
 ## Extend it
 
@@ -182,14 +226,21 @@ including against built-in tabs. Keep the tool set with `remember` and scope dat
 collection to the tab's composition. See [custom Compose tabs](docs/custom-tools.md)
 for existing functions without a `Modifier`, localization, state and native Android.
 
-Record logs or diagnostic events through the core API:
+Use `group("actron", title = { localizedTitle() }) { tab(...); tool(...) }` for
+a tab with its own subtools. Child IDs are scoped to the group; the selected child
+is remembered while the tool set lives. Existing Actron history/inspector screens
+can be supplied by the host without coupling the two libraries. See
+[grouped tools and Actron integration](docs/custom-tools.md#tabs-with-subtools).
+
+Record logs through the core API:
 
 ```kotlin
 mothlight.logs.record(LogEntry("log-1", nowMillis, LogLevel.INFO, "Cache", "Ready"))
-mothlight.events.record(DiagnosticEvent("event-1", nowMillis, "startup", "Database ready"))
 ```
 
-Use unique IDs per feed and scrub application-supplied messages before recording.
+Use unique log IDs and scrub application-supplied messages before recording.
+The [log inspector](docs/log-inspector.md) adds search, severity/tag filters,
+expandable messages, pause/follow controls and copy actions for recorded logs.
 
 ## Data capture
 
@@ -221,9 +272,7 @@ redacted data; it is not an authenticated replay facility.
 
 | Module | Purpose | Needs Compose in your app? |
 | --- | --- | --- |
-| `mothlight-core` | Instance-owned recording, bounded feeds, HTTP model and redaction | No |
-| `mothlight-retention` | Bounded weak-object observation on Android/JVM and iOS; common analysis contracts | No |
-| `mothlight-shark` | Optional Android/JVM heap capture and strong retention paths with Shark | No |
+| `mothlight-core` | Instance-owned recording, bounded logs, startup milestones, SQL/HTTP models and redaction | No |
 | `mothlight-memory` | Platform memory readings and cancellable observation | No |
 | `mothlight-compose` | Material 3 panel and custom tool API | Yes |
 | `mothlight-ktor` | Passive Ktor client integration | No |
@@ -232,7 +281,7 @@ redacted data; it is not an authenticated replay facility.
 | `mothlight-room` | Room 2 live database adapter (Android/JVM/iOS) | No |
 | `mothlight-room3` | Room 3 live database adapter (Android/JVM/iOS) | No |
 | `mothlight-android` | View factory for Activities and Fragments | No Compose source/compiler required |
-| `sample-desktop` | Interactive demo with synthetic Ktor responses and a custom tab | Demo |
+| `sample-desktop` | Reading app with live DEV HTTPS, persistent Room subscriptions/bookmarks and a resizable debug dock | Demo |
 | `sample-android` | Native Android Views + Retrofit demo, synthetic responses | No |
 
 English is the fallback language. Russian is selected automatically for a Russian
@@ -241,9 +290,7 @@ Application-supplied log messages, error categories and HTTP protocol values
 are data and are not translated.
 
 The optional [memory overlay](docs/memory.md) has a panel switch, per-instance
-settings and Compose/native Android View integration. Add the optional
-[retained-object tool](docs/retention.md) for Android/JVM and iOS observation,
-a live badge, search and collection history.
+settings and Compose/native Android View integration. It reports memory usage.
 
 ## Development
 

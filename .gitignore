@@ -14,3 +14,7 @@ kotlin-js-store/
 # Python source-policy checks.
 __pycache__/
 *.pyc
+# CocoIndex Code (ccc)
+/.cocoindex_code/
+# CodeGraph local index
+/.codegraph/

@@ -36,9 +36,9 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - run: python3 scripts/check_resources.py
       - run: python3 scripts/check_shrinker.py
-      - run: ./gradlew :mothlight-core:jvmTest :mothlight-memory:jvmTest :mothlight-retention:jvmTest :mothlight-shark:jvmTest :mothlight-sqlite:jvmTest :mothlight-room:jvmTest :mothlight-room3:jvmTest :mothlight-compose:jvmTest :mothlight-ktor:jvmTest :mothlight-okhttp:jvmTest :sample-desktop:classes :sample-android:assembleDebug :sample-android:assembleRelease --continue
+      - run: ./gradlew :mothlight-core:jvmTest :mothlight-memory:jvmTest :mothlight-sqlite:jvmTest :mothlight-room:jvmTest :mothlight-room3:jvmTest :mothlight-compose:jvmTest :mothlight-ktor:jvmTest :mothlight-okhttp:jvmTest :sample-desktop:classes :sample-android:assembleDebug :sample-android:assembleRelease --continue
       - name: Package consumer rules
-        run: ./gradlew :mothlight-core:bundleAndroidMainAar :mothlight-compose:bundleAndroidMainAar :mothlight-ktor:bundleAndroidMainAar :mothlight-memory:bundleAndroidMainAar :mothlight-retention:bundleAndroidMainAar :mothlight-shark:bundleAndroidMainAar :mothlight-room:bundleAndroidMainAar :mothlight-room3:bundleAndroidMainAar :mothlight-sqlite:bundleAndroidMainAar :mothlight-okhttp:bundleAndroidMainAar :mothlight-android:bundleReleaseAar :mothlight-memory:jvmJar :mothlight-retention:jvmJar
+        run: ./gradlew :mothlight-core:bundleAndroidMainAar :mothlight-compose:bundleAndroidMainAar :mothlight-ktor:bundleAndroidMainAar :mothlight-memory:bundleAndroidMainAar :mothlight-room:bundleAndroidMainAar :mothlight-room3:bundleAndroidMainAar :mothlight-sqlite:bundleAndroidMainAar :mothlight-okhttp:bundleAndroidMainAar :mothlight-android:bundleReleaseAar :mothlight-memory:jvmJar
       - run: python3 scripts/check_shrinker.py --artifacts
       - uses: actions/upload-artifact@v4
         if: always()
@@ -63,9 +63,11 @@ jobs:
           log-accepted-android-sdk-licenses: false
       - run: sdkmanager 'platforms;android-37.0' 'build-tools;36.0.0'
       - uses: gradle/actions/setup-gradle@v4
-      - run: ./gradlew :mothlight-core:iosSimulatorArm64Test :mothlight-memory:iosSimulatorArm64Test :mothlight-retention:iosSimulatorArm64Test :mothlight-sqlite:iosSimulatorArm64Test :mothlight-ktor:iosSimulatorArm64Test :mothlight-room:compileKotlinIosSimulatorArm64 :mothlight-room3:compileKotlinIosSimulatorArm64 :mothlight-compose:compileKotlinIosSimulatorArm64 :mothlight-ktor:compileKotlinIosSimulatorArm64 :mothlight-compose:compileKotlinJs :mothlight-compose:compileKotlinWasmJs :mothlight-ktor:compileKotlinJs :mothlight-ktor:compileKotlinWasmJs --continue
+      - run: ./gradlew :mothlight-core:iosSimulatorArm64Test :mothlight-memory:iosSimulatorArm64Test :mothlight-sqlite:iosSimulatorArm64Test :mothlight-ktor:iosSimulatorArm64Test :mothlight-room:compileKotlinIosSimulatorArm64 :mothlight-room3:compileKotlinIosSimulatorArm64 :mothlight-compose:compileKotlinIosSimulatorArm64 :mothlight-ktor:compileKotlinIosSimulatorArm64 :mothlight-compose:compileKotlinJs :mothlight-compose:compileKotlinWasmJs :mothlight-ktor:compileKotlinJs :mothlight-ktor:compileKotlinWasmJs --continue
       - name: Execute web runtime contracts
         run: ./gradlew :mothlight-core:jsNodeTest :mothlight-core:wasmJsNodeTest :mothlight-ktor:jsNodeTest :mothlight-ktor:wasmJsNodeTest --continue
+      - name: Verify desktop example and panel integration
+        run: ./gradlew :sample-desktop:test
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -89,11 +91,10 @@ jobs:
           log-accepted-android-sdk-licenses: false
       - run: sdkmanager 'platforms;android-37.0' 'build-tools;36.0.0'
       - uses: gradle/actions/setup-gradle@v4
-      - run: .\gradlew.bat :mothlight-memory:jvmTest :mothlight-retention:jvmTest --console=plain
+      - run: .\gradlew.bat :mothlight-memory:jvmTest --console=plain
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: windows-memory-test-results
           path: |
             mothlight-memory/build/test-results/
-            mothlight-retention/build/test-results/

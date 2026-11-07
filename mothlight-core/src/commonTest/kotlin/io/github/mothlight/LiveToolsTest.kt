@@ -59,26 +59,4 @@ class LiveToolsTest {
         trace.record("SELECT fresh", 6, 1)
         assertTrue(trace.snapshot.value.events.single().id > lastId)
     }
-    @Test fun realtimeMasksBeforePublishingAndKeepsSeparateConnectionHistory() {
-        var enabled = false
-        val inspector = RealtimeInspector(2, Redactor(captureJsonBodies = true)) { enabled }
-        inspector.record("chat", FrameDirection.INCOMING, "{}", 0)
-        assertTrue(inspector.frames.value.isEmpty())
-        enabled = true
-        inspector.connection("chat", ConnectionState.CONNECTED, 1)
-        inspector.record("chat", FrameDirection.OUTGOING, """{"token":"secret","n":1}""", 2)
-        assertEquals(CapturedBody.Text("""{"token":"***","n":1}"""), inspector.frames.value.single().payload)
-        inspector.record("presence", FrameDirection.INCOMING, "{}", 3)
-        inspector.record("chat", FrameDirection.INCOMING, "{}", 4)
-        assertEquals(listOf("presence", "chat"), inspector.frames.value.map { it.channel })
-        assertEquals(ConnectionState.CONNECTED, inspector.connections.value.single().state)
-        val previous = inspector.frames.value.last().id
-        inspector.clear()
-        assertTrue(inspector.connections.value.isEmpty())
-        inspector.record("new", FrameDirection.INCOMING, "{}", 5)
-        assertTrue(inspector.frames.value.single().id > previous)
-        val defaults = RealtimeInspector()
-        defaults.record("test", FrameDirection.INCOMING, "secret", 0)
-        assertEquals(CapturedBody.NotCaptured, defaults.frames.value.single().payload)
-    }
 }

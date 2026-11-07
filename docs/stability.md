@@ -13,7 +13,7 @@ SQLite and HTTP adapter pipelines.
 | HTTP request capture | OkHttp never reads upload bodies. Ktor captures already materialized text only; custom byte-array and streaming content are left for the transport to read. |
 | HTTP response capture | Capture failures omit diagnostic body data. Ktor reads at most `bodyLimit + 1` bytes from its observer copy and rejects oversized bodies. OkHttp uses a bounded peek. Original response content is not replaced. |
 | JSON masking | Capture rejects nesting deeper than 64 containers before recursive parsing/masking. Rejected content is omitted in full, including any secrets. |
-| Memory and retained-object observations | Existing recovery and virtual-time tests cover failed reads/checks, cancellation, pause, clear and owner shutdown. |
+| Memory observations | Recovery and virtual-time tests cover failed reads, cancellation, pause and collector shutdown. |
 
 Fallback handling catches recoverable exceptions at diagnostic boundaries.
 Coroutine cancellation still propagates. Fatal errors such as out-of-memory are
@@ -41,6 +41,5 @@ reflection; resources and packaged consumer rules are validated separately.
 These checks do not establish that all applications, devices or custom tools are
 crash-free. Device UI smoke and representative host load tests remain necessary;
 see [verification](verification.md) for tested platforms and remaining gaps.
-Heap capture is an explicit, expensive action and should not run automatically in
-an end-user session. Keep body capture disabled for production/streaming clients
+Keep body capture disabled for production/streaming clients
 unless the host explicitly needs and budgets for it.

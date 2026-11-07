@@ -42,7 +42,7 @@ class MothlightInterceptor(private val inspector: NetworkInspector) : Intercepto
     private fun capturedBody(response: Response): CapturedBody {
         if (!inspector.redactor.captureJsonBodies) return CapturedBody.NotCaptured
         return try {
-            val subtype = response.body?.contentType()?.subtype ?: return CapturedBody.NotCaptured
+            val subtype = response.body.contentType()?.subtype ?: return CapturedBody.NotCaptured
             if (subtype != "json" && !subtype.endsWith("+json")) return CapturedBody.NotCaptured
             // Extra byte lets the redactor distinguish an oversized ASCII body from a complete one.
             response.peekBody(inspector.redactor.bodyLimit.toLong() + 1).use { CapturedBody.Text(it.string()) }

@@ -1,31 +1,26 @@
 # Extraction inventory
 
-This inventory comes from implemented tools in the original Debug panel, not
-from its aspirational backlog. It separates shipped reusable tools from future
-extractions and host-specific plugins. No original application source is needed
-to build Mothlight.
+Mothlight keeps portable HTTP, database, log, startup and memory-usage tools.
+The original application's source is not needed to build it.
 
-| Original capability | Mothlight status | Remaining work |
+| Capability | Status | Remaining work |
 | --- | --- | --- |
-| HTTP transactions, request details, cURL | Available; Ktor and OkHttp/Retrofit | Explicit replay UI |
-| Logs and generic diagnostic events | Available | Category-specific drill-down |
-| Room table browser and invalidations | Available; Room 2/3 adapters | Schema details, optional controlled read-only SQL console |
-| SQL execution feed and query statistics | Available; SQLiteDriver wrapper | Query plans; separately labelled subscription heuristic |
-| Socket frames and connection history | Available; host-instrumented passive hooks | Optional transport adapters, not app-specific channel enums |
-| Startup phases and navigation timing | Typed startup milestones and interval waterfall available | Arbitrary timed spans and navigation timing |
-| Lifecycle counters | Typed counters and lifecycle history available | Host reports creation/destruction; no framework required |
-| Decompose component tree | Host plugin; excluded from the standard library | Keep framework object graphs and tree traversal in the host |
-| Navigation breadcrumbs | Typed bounded trail with direction and filtering available | Framework hooks belong to host integrations |
-| Invariant counters and alarms | Counts, peak/last severity, masked samples and screen context available | Host-owned alert policy |
-| Capability and subscription diagnostics | Custom tool/source API | Typed portable contracts |
-| DI graph, singleton identity diagnostics | Host plugin | Concrete DI instrumentation stays in the host |
-| Network latency/error simulation | Not yet extracted | Explicit opt-in adapter and deterministic rule tests |
-| Flight recorder and timeline export | Not yet extracted | Bounded unified capture, redacted export format |
-| Memory usage setting and overlay | Live heap/native/process metrics; Compose and Android Views | Host-owned persistence; heap dumps remain separate |
-| Retained objects / leak indicator | [Portable watcher, tool and live badge](retention.md) available on Android/JVM/iOS | Optional Android/JVM Shark paths implemented; native graph analysis and retained sizes pending |
-| UI switches, crash triggers | Host plugin | Actions remain explicitly owned by the application |
-| Sessions, quick login, outbox, message seeder, call tools | Host plugin | Keep product models and actions outside the library |
+| HTTP transactions, details and cURL | Ktor and OkHttp/Retrofit; adaptive list/details, filters, JSON tree, text and copy actions | Request comparison, explicit replay UI |
+| Logs | Instance-owned bounded feed; search, severity/tag filters, expandable messages, follow/pause and copy actions | Structured payload viewers and trace links |
+| Room table browser and invalidations | Room 2/3 adapters; column schema with constraints and generated kinds | Indexes, foreign keys, optional read-only SQL console |
+| SQL execution feed and statistics | SQLiteDriver wrapper | Query plans |
+| Startup milestones | Ordered milestones and interval waterfall | Arbitrary timed spans |
+| Memory usage overlay | Heap/native/process metrics where supported | Host-owned persistence and platform readers |
+| Custom tools | Localized tabs and grouped subtools | Host supplies its own screens and controllers |
 
-Start with observation and bounded sources. Add deliberate actions (replay,
-network disruption, crash triggers) through explicit tools, not hidden side effects
-of opening a panel. Nothing in the table marked remaining is claimed as implemented.
+Realtime transport capture, lifecycle counters, navigation history, invariant
+reporting, generic diagnostic events, retained-object watching, heap analysis and
+demo scenarios have been removed from this library. Their implementations,
+recorders, dependencies and sample hooks are removed along with their tabs.
+
+Decompose trees, Centrifuge-specific tools, DI graphs, authentication, outbox,
+message seeding and call controls belong to host extensions. Independent libraries
+such as Actron can supply their existing Compose screens through grouped tools.
+
+See [feature comparison and diagnostic priorities](feature-comparison.md) for
+documented alternatives, proposed additions and the interface evaluation tasks.

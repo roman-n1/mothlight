@@ -29,9 +29,18 @@ class MothlightToolsBuilder internal constructor(initialTools: List<MothlightToo
         tool(MothlightTool(id, title, content))
     }
 
-    /** Adds a ready-made tool, for example a database or retained-object inspector. */
+    /** Adds a ready-made tool, for example a database inspector. */
     fun tool(tool: MothlightTool) {
         entries.add(tool)
+    }
+
+    /** Adds a host-owned tab with its own subtools. Child IDs are scoped to this group. */
+    fun group(
+        id: String,
+        title: @Composable () -> String,
+        configure: MothlightToolsBuilder.() -> Unit,
+    ) {
+        tool(toolGroup(id, title, MothlightToolsBuilder(emptyList()).apply(configure).build()))
     }
 
     internal fun build(): MothlightTools = MothlightTools(entries)

@@ -28,6 +28,10 @@ class RoomDatabaseSourceTest {
             db.items().insert(Item(1, "before", "private"))
             val source = RoomDatabaseSource(db)
             assertEquals(listOf("items"), source.tables())
+            val schema = assertIs<io.github.mothlight.DatabaseSchema.Available>(source.schema("items"))
+            assertEquals(listOf("id", "name", "token"), schema.columns.map { it.name })
+            assertEquals(1, schema.columns.first().primaryKeyPosition)
+            assertTrue(schema.columns.all { it.notNull })
             val snapshots = Channel<io.github.mothlight.DatabasePage>(Channel.UNLIMITED)
             val job = backgroundScope.launch { DatabaseBrowser(source).page("items").collect { snapshots.send(it) } }
             assertEquals(listOf(DatabaseCell.Text("1"), DatabaseCell.Text("before"), DatabaseCell.Text("***")), snapshots.receive().rows.single())

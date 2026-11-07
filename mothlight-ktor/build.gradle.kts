@@ -21,12 +21,12 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(project(":mothlight-core"))
-            api("io.ktor:ktor-client-core:3.5.0")
+            api("io.ktor:ktor-client-core:3.6.1")
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
-            implementation("io.ktor:ktor-client-mock:3.5.0")
+            implementation("io.ktor:ktor-client-mock:3.6.1")
         }
     }
 }
