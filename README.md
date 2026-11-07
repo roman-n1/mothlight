@@ -114,6 +114,8 @@ Platform targets: Android, JVM, iOS arm64/simulator arm64, JS and Wasm. See
 [verification](docs/verification.md) for what was actually tested; declaring a target
 is not a claim of device validation.
 
+Release maintainers can publish from GitHub Actions. See [Maven Central releases](docs/publishing.md).
+
 ## Use from source
 
 Until the first Maven Central release, use a Gradle composite build. In your app's
