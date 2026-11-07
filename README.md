@@ -128,8 +128,8 @@ includeBuild("../mothlight")
 Then add only the modules you need:
 
 ```kotlin
-implementation("io.github.roman-n1.mothlight:mothlight-compose:0.1.0-SNAPSHOT")
-implementation("io.github.roman-n1.mothlight:mothlight-ktor:0.1.0-SNAPSHOT")
+implementation("io.github.roman-n1.mothlight:mothlight-compose:1.0.0-beta.1")
+implementation("io.github.roman-n1.mothlight:mothlight-ktor:1.0.0-beta.1")
 ```
 
 Create and own one instance in your application graph. Recording starts disabled:

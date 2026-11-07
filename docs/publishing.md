@@ -1,7 +1,7 @@
 # Maven Central releases
 
 GitHub Actions builds and signs the libraries. To check packaging from a browser,
-open **Actions → Publish → Run workflow**. The run executes Verify and uploads
+open **Actions → Publish → Run workflow**. The run executes Verify and the published consumer check, then uploads
 an unsigned Maven repository. It works without Central credentials.
 
 ## One-time setup
@@ -28,8 +28,7 @@ an unsigned Maven repository. It works without Central credentials.
 Set `mothlightVersion` in `gradle.properties` to the intended release version
 and merge the version change. From **Releases → Draft a new release**, create a
 matching `v<version>` tag targeting that commit and publish the GitHub release.
-For example, version `0.1.0` uses tag `v0.1.0`. A GitHub prerelease uses a
-version with a suffix, for example `0.1.0-rc.1`.
+For Beta 1, publish a GitHub prerelease tagged `v1.0.0-beta.1`.
 
 The workflow checks the tag, runs Verify, and publishes signed library artifacts
 under `io.github.roman-n1.mothlight`. If publication is disabled, it produces
