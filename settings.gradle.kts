@@ -9,7 +9,3 @@ include(":mothlight-android", ":sample-android")
 include(":mothlight-sqlite", ":mothlight-room", ":mothlight-room3")
 
 include(":mothlight-memory")
-
-include(":mothlight-retention")
-
-include(":mothlight-shark")

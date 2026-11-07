@@ -8,7 +8,7 @@ never installs global lifecycle hooks or owns login/logout.
 application / debug source set
   ├── Mothlight instance
   ├── Ktor or OkHttp adapter → HTTP recorder → redactor → bounded StateFlow
-  ├── host log and event adapters → bounded feeds
+  ├── host log adapter → bounded log feed
   └── Compose panel or Android View adapter → selected tool only
 ```
 
@@ -37,15 +37,17 @@ Package names, build conventions, privacy policy and UI integration were changed
   inspectors stay in the application. A host may expose them as custom tools.
 - Standard tools are architecture-neutral. Decompose component trees, framework
   navigation/lifecycle hooks and concrete DI graph instrumentation stay in host
-  plugins. Generic lifecycle counters and navigation breadcrumbs accept explicit
-  values without retaining framework objects.
-- Room/SQLite adapters and passive socket recording are available; applications
-  own their connections, database lifetime and instrumentation hooks.
+  plugins.
+- Room/SQLite adapters are available; applications own database lifetime and
+  instrumentation hooks.
+- Host extensions can register grouped tabs with subtools. Independent libraries
+  such as Actron supply their existing composables and keep ownership of recording
+  sessions; Mothlight owns only their placement and selected content composition.
 
 ## Migrating an existing panel
 
 1. Own one Mothlight instance in the application graph.
-2. Connect the HTTP adapter to the existing client and bridge logs/events explicitly.
+2. Connect the HTTP adapter to the existing client and bridge logs explicitly.
 3. Replace the debug host with the standalone panel; retain application tools as
    custom tabs using their existing ports and lifecycle owners.
 4. Compare recording, masking, enable/disable, navigation and logout behavior on

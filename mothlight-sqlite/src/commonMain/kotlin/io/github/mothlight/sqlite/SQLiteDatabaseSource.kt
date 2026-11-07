@@ -22,6 +22,36 @@ class SQLiteDatabaseSource(
             "AND name NOT GLOB 'room_*' AND name NOT GLOB 'android_*' ORDER BY name", 1024,
     ).rows.flatMap { row -> row.take(1).filterIsInstance<DatabaseCell.Text>().map { it.value } }
 
+    override suspend fun schema(table: String): DatabaseSchema {
+        require(table in tables()) { "Unknown table" }
+        val literal = "'" + table.replace("'", "''") + "'"
+        // Project metadata explicitly: defaults can contain secrets and must never be captured.
+        val result = read(
+            "SELECT name, type, \"notnull\", pk, hidden FROM pragma_table_xinfo($literal) ORDER BY cid LIMIT 513", 513,
+        )
+        check(result.rows.isNotEmpty()) { "Table metadata unavailable" }
+        val columns = result.rows.take(512).map { row ->
+            fun text(index: Int): String {
+                val cell = row[index]
+                check(cell is DatabaseCell.Text) { "Invalid table metadata" }
+                return cell.value
+            }
+            val notNull = text(2)
+            check(notNull == "0" || notNull == "1") { "Invalid NOT NULL metadata" }
+            val pk = text(3).toIntOrNull() ?: error("Invalid primary key metadata")
+            check(pk >= 0) { "Invalid primary key metadata" }
+            val kind = when (text(4)) {
+                "0" -> DatabaseColumnKind.Regular
+                "1" -> DatabaseColumnKind.Hidden
+                "2" -> DatabaseColumnKind.GeneratedVirtual
+                "3" -> DatabaseColumnKind.GeneratedStored
+                else -> error("Unknown column kind")
+            }
+            DatabaseColumn(text(0), text(1), notNull == "1", pk, kind)
+        }
+        return DatabaseSchema.Available(columns, truncated = result.rows.size > 512)
+    }
+
     override suspend fun page(table: String, limit: Int, offset: Int): DatabasePage {
         require(limit > 0); require(offset >= 0)
         require(table in tables()) { "Unknown table" }

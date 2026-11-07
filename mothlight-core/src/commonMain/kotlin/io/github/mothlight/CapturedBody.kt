@@ -8,11 +8,6 @@ sealed interface CapturedBody {
     data class Text(val value: String) : CapturedBody
 }
 
-sealed interface ScreenContext {
-    data object Unspecified : ScreenContext
-    data class Named(val value: String) : ScreenContext
-}
-
 sealed interface SqlOutcome {
     data object Succeeded : SqlOutcome
     data class Failed(val category: String) : SqlOutcome

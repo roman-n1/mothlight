@@ -17,11 +17,11 @@ kotlin {
         commonMain.dependencies { api(project(":mothlight-core")) }
         jvmMain {
             kotlin.srcDir("src/jvmAndroidMain/kotlin")
-            dependencies { api("com.squareup.okhttp3:okhttp:4.12.0") }
+            dependencies { api("com.squareup.okhttp3:okhttp:5.5.1") }
         }
         androidMain {
             kotlin.srcDir("src/jvmAndroidMain/kotlin")
-            dependencies { api("com.squareup.okhttp3:okhttp:4.12.0") }
+            dependencies { api("com.squareup.okhttp3:okhttp:5.5.1") }
         }
         jvmTest.dependencies {
             implementation(kotlin("test"))

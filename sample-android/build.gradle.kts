@@ -18,10 +18,9 @@ android {
     }
 }
 dependencies {
-    implementation(project(":mothlight-shark"))
     implementation(project(":mothlight-room"))
-    implementation("androidx.sqlite:sqlite-bundled:2.7.0")
-    ksp("androidx.room:room-compiler:2.8.4")
+    implementation("androidx.sqlite:sqlite-bundled:2.7.1")
+    ksp("androidx.room:room-compiler:2.8.5")
     implementation(project(":mothlight-android"))
     implementation(project(":mothlight-okhttp"))
     implementation("androidx.activity:activity:1.13.0")

@@ -10,6 +10,35 @@ import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.test.*
 
 class CustomTabsTest {
+    @Test fun groupsHaveScopedIdsAndRegistrationDoesNotComposeContent() {
+        val mothlight = Mothlight()
+        val tools = mothlightTools(mothlight) {
+            group("messenger", { "Messenger" }) {
+                tab("http", { "Host HTTP" }) { error("Registration composed content") }
+            }
+            group("actron", { "Actron" }) {
+                tab("http", { "History" }) { error("Registration composed content") }
+            }
+        }
+        assertEquals(listOf("messenger", "actron"), tools.entries.takeLast(2).map { it.id })
+        assertFailsWith<IllegalArgumentException> {
+            mothlightTools(mothlight) { group("empty", { "Empty" }) {} }
+        }
+        assertFailsWith<IllegalArgumentException> {
+            mothlightTools(mothlight) {
+                group("duplicates", { "Duplicates" }) {
+                    tab("same", { "One" }) {}
+                    tab("same", { "Two" }) {}
+                }
+            }
+        }
+        assertFailsWith<IllegalArgumentException> {
+            mothlightTools(mothlight) {
+                group("http", { "Colliding group" }) { tab("child", { "Child" }) {} }
+            }
+        }
+    }
+
     @Test fun customTabsAppendToBuiltInsInOrderAndKeepTheirCallbacks() {
         val mothlight = Mothlight()
         val plugin = MothlightTool("plugin", { "Plugin" }, {})

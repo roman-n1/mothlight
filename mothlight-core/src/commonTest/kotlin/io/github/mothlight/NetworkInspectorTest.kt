@@ -51,17 +51,14 @@ class NetworkInspectorTest {
         first.network.recordStart("GET", "/a", emptyMap(), CapturedBody.NotCaptured, 0)
         second.network.recordStart("GET", "/b", emptyMap(), CapturedBody.NotCaptured, 0)
         first.logs.record(LogEntry("1", 0, LogLevel.INFO, "test", "message"))
-        first.events.record(DiagnosticEvent("1", 0, "startup", "ready"))
         assertEquals(1, first.network.transactions.value.size)
         assertEquals(1, first.logs.items.value.size)
-        assertEquals(1, first.events.items.value.size)
         assertTrue(second.network.transactions.value.isEmpty())
         first.setEnabled(false)
         first.logs.record(LogEntry("2", 0, LogLevel.INFO, "test", "discarded"))
         assertEquals(1, first.logs.items.value.size)
         first.clear()
         assertTrue(first.logs.items.value.isEmpty())
-        assertTrue(first.events.items.value.isEmpty())
         assertTrue(first.network.transactions.value.isEmpty())
     }
     @Test fun concurrentRequestsKeepUniqueIdsAndAllCompletions() = runTest {

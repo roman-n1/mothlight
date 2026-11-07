@@ -1,14 +1,18 @@
 package io.github.mothlight.compose
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import io.github.mothlight.*
+import io.github.mothlight.Mothlight
 import io.github.mothlight.compose.resources.*
 import org.jetbrains.compose.resources.stringResource
 
@@ -16,99 +20,46 @@ import org.jetbrains.compose.resources.stringResource
 internal fun StartupContent(mothlight: Mothlight, modifier: Modifier) {
     val spans by mothlight.startup.spans.collectAsState()
     val rows = remember(spans) { startupRows(spans) }
+    var selectedId by remember(mothlight) { mutableStateOf(0L) }
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(Res.string.startup_hint), style = MaterialTheme.typography.bodySmall)
-        LazyColumn {
-            items(rows, key = { it.id }) { row ->
-                Column(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(row.stage, style = MaterialTheme.typography.titleMedium)
-                    Text(stringResource(Res.string.startup_interval, row.offsetMillis, row.durationMillis))
-                    LinearProgressIndicator(progress = { row.fraction }, modifier = Modifier.fillMaxWidth())
-                }
-                HorizontalDivider()
-            }
-        }
-    }
-}
-
-private enum class LifecycleView { COUNTERS, HISTORY }
-
-@Composable
-internal fun LifecycleContent(mothlight: Mothlight, modifier: Modifier) {
-    val snapshot by mothlight.lifecycle.snapshot.collectAsState()
-    var query by remember { mutableStateOf("") }
-    var mode by remember { mutableStateOf(LifecycleView.COUNTERS) }
-    val rows = remember(snapshot, query) { lifecycleRows(snapshot, query) }
-    val events = remember(snapshot, query) { lifecycleEvents(snapshot, query) }
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(Res.string.lifecycle_hint), style = MaterialTheme.typography.bodySmall)
-        OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(Res.string.search_component)) })
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(selected = mode == LifecycleView.COUNTERS, onClick = { mode = LifecycleView.COUNTERS }, label = { Text(stringResource(Res.string.diagnostic_counters)) })
-            FilterChip(selected = mode == LifecycleView.HISTORY, onClick = { mode = LifecycleView.HISTORY }, label = { Text(stringResource(Res.string.diagnostic_history)) })
-        }
-        LazyColumn(Modifier.weight(1f)) {
-            when (mode) {
-                LifecycleView.COUNTERS -> items(rows, key = { it.kind }) { row ->
-                    ListItem(headlineContent = { Text(row.kind) }, supportingContent = {
-                        Text(stringResource(Res.string.lifecycle_counts, row.created, row.destroyed, row.balance))
-                    })
-                    HorizontalDivider()
-                }
-                LifecycleView.HISTORY -> items(events, key = { it.id }) { event ->
-                    ListItem(headlineContent = { Text(event.kind) }, supportingContent = {
-                        Text(stringResource(lifecycleLabel(event.event)) + " · " + event.timestampMillis)
-                    })
-                    HorizontalDivider()
-                }
-            }
-        }
-    }
-}
-
-@Composable
-internal fun NavigationContent(mothlight: Mothlight, modifier: Modifier) {
-    val entries by mothlight.navigation.entries.collectAsState()
-    var query by remember { mutableStateOf("") }
-    val rows = remember(entries, query) { navigationRows(entries, query) }
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(Res.string.navigation_hint), style = MaterialTheme.typography.bodySmall)
-        OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(Res.string.search_destination)) })
-        SelectionContainer(Modifier.weight(1f)) {
-            LazyColumn {
-                items(rows, key = { it.id }) { row ->
-                    ListItem(headlineContent = { Text(row.destination) }, supportingContent = {
-                        Text(stringResource(navigationLabel(row.direction)) + " · " + row.timestampMillis)
-                    })
-                    HorizontalDivider()
-                }
-            }
-        }
-    }
-}
-
-@Composable
-internal fun InvariantsContent(mothlight: Mothlight, modifier: Modifier) {
-    val snapshot by mothlight.invariants.snapshot.collectAsState()
-    var query by remember { mutableStateOf("") }
-    val rows = remember(snapshot, query) { invariantRows(snapshot, query) }
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(Res.string.invariants_hint), style = MaterialTheme.typography.bodySmall)
-        OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(Res.string.search_rule)) })
-        SelectionContainer(Modifier.weight(1f)) {
-            LazyColumn {
-                items(rows, key = { it.rule }) { row ->
-                    ListItem(headlineContent = { Text(row.rule, color = severityColor(row.highestSeverity)) }, supportingContent = {
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(stringResource(Res.string.invariant_count, row.count.toString(), row.lastSeenAtMillis.toString()))
-                            Text(stringResource(Res.string.invariant_severities, stringResource(severityLabel(row.highestSeverity)), stringResource(severityLabel(row.lastSeverity))))
-                            when (val screen = row.lastScreen) {
-                                ScreenContext.Unspecified -> Unit
-                                is ScreenContext.Named -> Text(stringResource(Res.string.invariant_screen, screen.value))
-                            }
-                            Text(localizedBody(row.lastSample))
+        if (rows.isEmpty()) {
+            Text(stringResource(Res.string.startup_empty))
+        } else {
+            val total = rows.last().offsetMillis.toULong()
+            Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surfaceVariant) {
+                Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(stringResource(Res.string.startup_axis), style = MaterialTheme.typography.labelLarge)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(stringResource(Res.string.duration_ms, "0"), style = MaterialTheme.typography.labelMedium)
+                        if (total > 1uL) {
+                            Text(stringResource(Res.string.duration_ms, (total / 2uL).toString()),
+                                style = MaterialTheme.typography.labelMedium)
                         }
-                    })
+                        if (total > 0uL) Text(stringResource(Res.string.duration_ms, total.toString()),
+                            style = MaterialTheme.typography.labelMedium)
+                    }
+                }
+            }
+            LazyColumn(Modifier.weight(1f)) {
+                items(rows, key = { it.id }) { row ->
+                    val selected = selectedId == row.id
+                    Surface(color = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface) {
+                        Column(
+                            Modifier.fillMaxWidth().testTag("startup-row:${row.id}")
+                                .selectable(selected, onClick = { selectedId = if (selected) 0L else row.id })
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Text(row.stage, style = MaterialTheme.typography.titleSmall)
+                            Text(
+                                if (row.isLast) stringResource(Res.string.startup_last_mark, row.offsetMillis)
+                                else stringResource(Res.string.startup_interval, row.offsetMillis, row.durationMillis),
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                            StartupTrack(row, selected, total > 0uL)
+                        }
+                    }
                     HorizontalDivider()
                 }
             }
@@ -116,24 +67,26 @@ internal fun InvariantsContent(mothlight: Mothlight, modifier: Modifier) {
     }
 }
 
-private fun lifecycleLabel(event: LifecycleEvent) = when (event) {
-    LifecycleEvent.CREATED -> Res.string.lifecycle_created
-    LifecycleEvent.DESTROYED -> Res.string.lifecycle_destroyed
-}
-private fun navigationLabel(direction: NavigationDirection) = when (direction) {
-    NavigationDirection.PUSH -> Res.string.navigation_push
-    NavigationDirection.POP -> Res.string.navigation_pop
-    NavigationDirection.REPLACE -> Res.string.navigation_replace
-    NavigationDirection.RESET -> Res.string.navigation_reset
-}
-private fun severityLabel(severity: InvariantSeverity) = when (severity) {
-    InvariantSeverity.INFO -> Res.string.severity_info
-    InvariantSeverity.WARNING -> Res.string.severity_warning
-    InvariantSeverity.ERROR -> Res.string.severity_error
-}
 @Composable
-private fun severityColor(severity: InvariantSeverity) = when (severity) {
-    InvariantSeverity.INFO -> MaterialTheme.colorScheme.primary
-    InvariantSeverity.WARNING -> MaterialTheme.colorScheme.secondary
-    InvariantSeverity.ERROR -> MaterialTheme.colorScheme.error
+private fun StartupTrack(row: StartupRow, selected: Boolean, hasElapsedTime: Boolean) {
+    val track = MaterialTheme.colorScheme.outlineVariant
+    val active = if (selected) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.primary
+    Canvas(Modifier.fillMaxWidth().height(16.dp)) {
+        val padding = 4.dp.toPx()
+        val width = (size.width - 2 * padding).coerceAtLeast(0f)
+        val center = size.height / 2
+        fun x(fraction: Float) = padding + width * fraction
+        if (hasElapsedTime) {
+            drawLine(track, Offset(x(0f), center), Offset(x(1f), center), strokeWidth = 2.dp.toPx())
+            for (tick in listOf(0f, 0.5f, 1f)) {
+                drawLine(track, Offset(x(tick), center - 4.dp.toPx()), Offset(x(tick), center + 4.dp.toPx()))
+            }
+        }
+        if (row.startFraction == row.endFraction) {
+            drawCircle(active, radius = 3.dp.toPx(), center = Offset(x(row.startFraction), center))
+        } else {
+            drawLine(active, Offset(x(row.startFraction), center), Offset(x(row.endFraction), center),
+                strokeWidth = 5.dp.toPx(), cap = StrokeCap.Round)
+        }
+    }
 }

@@ -30,9 +30,6 @@ internal fun responseDetails(tx: NetworkTransaction, body: String = bodyText(tx.
 internal fun logRows(entries: List<LogEntry>): List<FeedRow> = entries.asReversed().map {
     FeedRow(it.id, it.message, "${it.timestampMillis} · ${it.level} · ${it.tag}")
 }
-internal fun eventRows(entries: List<DiagnosticEvent>): List<FeedRow> = entries.asReversed().map {
-    FeedRow(it.id, it.message, "${it.timestampMillis} · ${it.category}")
-}
 
 private fun bodyText(body: CapturedBody) = when (body) {
     is CapturedBody.Text -> body.value

@@ -12,13 +12,13 @@ kotlin {
     iosArm64()
     iosSimulatorArm64()
     sourceSets {
-        commonMain.dependencies { api(project(":mothlight-core")); api(project(":mothlight-sqlite")); api("androidx.room3:room3-runtime:3.0.0"); implementation("androidx.sqlite:sqlite-async:2.7.0") }
+        commonMain.dependencies { api(project(":mothlight-core")); api(project(":mothlight-sqlite")); api("androidx.room3:room3-runtime:3.0.3"); implementation("androidx.sqlite:sqlite-async:2.7.1") }
         commonTest.dependencies {
             implementation(kotlin("test"))
             implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
-            implementation("androidx.sqlite:sqlite-bundled:2.7.0")
+            implementation("androidx.sqlite:sqlite-bundled:2.7.1")
         }
     }
 }
 
-dependencies { add("kspJvmTest", "androidx.room3:room3-compiler:3.0.0") }
+dependencies { add("kspJvmTest", "androidx.room3:room3-compiler:3.0.3") }

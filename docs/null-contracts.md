@@ -9,7 +9,7 @@ an object exists. Generic presence wrappers are not an alternative.
 The rule applies to public APIs, internal properties, parameters, return types and
 generic bounds in every library source set, including Android View integration.
 It does not apply to third-party implementations, generated code, tests or host
-samples (for example Android callbacks and deliberately released demo roots).
+samples (for example Android callbacks).
 Java and platform APIs can still return missing references: adapters immediately
 normalize these into a domain state, skip an absent record, or report a specific
 contract failure. Safe calls and Elvis expressions at those boundaries remain
@@ -19,23 +19,17 @@ available; propagating nullable types into library contracts does not.
 
 | Data or behavior | Contract |
 | --- | --- |
-| HTTP body, realtime payload, invariant sample | `CapturedBody.Text`, `NotCaptured`, `TooLarge`, `NotJson` |
+| HTTP body | `CapturedBody.Text`, `NotCaptured`, `TooLarge`, `NotJson` |
 | HTTP request state | `Status.InProgress`, `Completed(code, durationMillis)`, `Failed(error, durationMillis)` |
 | Database cell | `DatabaseCell.Text`, `SqlNull`, `Blob` |
 | Memory measurement | `MemoryReading.Bytes`, `Unavailable` |
-| Screen metadata | `ScreenContext.Named`, `Unspecified` |
 | SQL execution outcome | `SqlOutcome.Succeeded`, `Failed(category)` |
-| Heap finding | `RetentionFinding.StrongPath(watchId, path)`, `NotInDump(watchId)`, `NoStrongPath(watchId)` |
 | Persistence without a host store | `TransientMemoryOverlayStore` (settings still own their in-memory value) |
-| No heap analyzer installed | `UnsupportedRetentionAnalyzer` |
-| Overlay configuration | `RetentionOverlay.Hidden`, `Visible(watcher, action)` |
-| Read-only badge | `RetentionAction.ReadOnly`; use `OpenTool` for an interactive badge |
 
 These states preserve domain distinctions. A measured zero is not unavailable;
 an empty SQL text cell is not SQL NULL; text containing `[BLOB]` is not a BLOB.
 JSON containing a `null` field is still valid captured JSON. A pending HTTP request
-has no fabricated response code or elapsed duration. A strong-path finding always
-contains its path, while other findings do not expose that property at all.
+has no fabricated response code or elapsed duration.
 
 No NPE is used to validate an executor's result. A malformed SQLite count result
 raises `IllegalStateException` with a fixed, non-sensitive contract message; the
@@ -56,12 +50,7 @@ This is a source-breaking change. There are no nullable compatibility overloads.
 - Wrap valid memory measurements with `MemoryReading.Bytes(value)`, or normalize
   platform sentinel values with `MemoryReading.bytes(rawValue)`. Use `Unavailable`
   for missing measurements. `MemoryReading.limit` also rejects zero/unbounded limits.
-- Pass `ScreenContext.Named("Details")` for screen metadata. Omit the argument to
-  use `Unspecified`. SQL events now expose `outcome` instead of nullable `errorType`.
-- Match on `RetentionFinding.StrongPath` before accessing `path`. An absent
-  analyzer is represented by the default `UnsupportedRetentionAnalyzer` object.
-- Pass `retention = RetentionOverlay.Visible(watcher, RetentionAction.OpenTool { ... })`
-  to the Compose overlay or Android View factory. The default is `Hidden`.
+- SQL events expose `outcome` instead of nullable `errorType`.
 - `MothlightPanelState.selectedTool` exposes `ToolSelection.Default` or `Named(id)`.
   `selectTool(id)` remains the host entry point.
 - `ProbeFeed<T : Any>` rejects nullable payload types at compilation.

@@ -45,7 +45,7 @@ class MothlightInterceptorTest {
             .newCall(Request.Builder().url("https://example.test").build()).execute().use {
                 assertEquals(200, it.code)
                 assertSame(body, it.body)
-                assertEquals("original", it.body!!.source().readUtf8())
+                assertEquals("original", it.body.source().readUtf8())
             }
         val tx = inspector.transactions.value.single()
         assertIs<Status.Completed>(tx.status)
@@ -56,7 +56,7 @@ class MothlightInterceptorTest {
         val inspector = NetworkInspector()
         client(inspector) { response(it) }.newCall(Request.Builder().url("https://example.test").build()).execute().use {
             assertEquals(200, it.code)
-            assertNotNull(it.body!!.string())
+            assertNotNull(it.body.string())
         }
         assertTrue(inspector.transactions.value.isEmpty())
     }
@@ -95,7 +95,7 @@ class MothlightInterceptorTest {
         inspector.setEnabled(true)
         val original = """{"data":"${"a".repeat(100)}"}"""
         client(inspector) { response(it, original) }.newCall(Request.Builder().url("https://example.test").build()).execute().use {
-            assertEquals(original, it.body!!.string())
+            assertEquals(original, it.body.string())
         }
         assertEquals(CapturedBody.TooLarge, inspector.transactions.value.single().responseBody)
     }

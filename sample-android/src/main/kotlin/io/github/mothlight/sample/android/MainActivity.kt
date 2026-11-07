@@ -1,17 +1,21 @@
 package io.github.mothlight.sample.android
 
 import android.os.Bundle
+import android.os.SystemClock
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import io.github.mothlight.room.RoomDatabaseSource
 import io.github.mothlight.sqlite.TracingSQLiteDriver
 import io.github.mothlight.compose.*
-import io.github.mothlight.retention.RetentionWatcher
 import kotlinx.coroutines.*
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
 import androidx.activity.ComponentActivity
+import androidx.activity.enableEdgeToEdge
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.doOnPreDraw
 import io.github.mothlight.*
 import io.github.mothlight.android.createMothlightView
 import io.github.mothlight.android.createMemoryOverlayView
@@ -23,6 +27,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Retrofit
 import retrofit2.http.GET
+import java.util.concurrent.atomic.AtomicLong
 
 /** Native Android Views + Retrofit. No Compose plugin or composable functions in this app. */
 class MainActivity : ComponentActivity() {
@@ -37,20 +42,21 @@ class MainActivity : ComponentActivity() {
         }.build()
     private val api = Retrofit.Builder().baseUrl("https://demo.mothlight.test/").client(client).build().create(DemoApi::class.java)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-    private val retentionWatcher = RetentionWatcher(scope)
     private val panelState = MothlightPanelState()
-    private var heldObject: Any? = null
     private lateinit var database: DemoDatabase
     private var sequence = 0L
+    private val logSequence = AtomicLong()
     private var pending: Call<ResponseBody>? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         mothlight.setEnabled(true)
-        retentionWatcher.setEnabled(true)
+        mothlight.startup.mark("activity_created", SystemClock.elapsedRealtime())
         database = Room.inMemoryDatabaseBuilder(this, DemoDatabase::class.java)
             .setDriver(TracingSQLiteDriver(BundledSQLiteDriver(), mothlight.sql, { mothlight.enabled.value }))
             .setQueryCoroutineContext(Dispatchers.IO).build()
-        val tools = MothlightTools(defaultMothlightTools(mothlight).entries + databaseTool(RoomDatabaseSource(database)) + retentionTool(retentionWatcher, analyzer = io.github.mothlight.shark.androidRetentionAnalyzer(this)))
+        mothlight.startup.mark("room_configured", SystemClock.elapsedRealtime())
+        val tools = MothlightTools(defaultMothlightTools(mothlight).entries + databaseTool(RoomDatabaseSource(database)))
         val layout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         val requestButton = Button(this).apply {
             setText(R.string.mock_request)
@@ -58,43 +64,28 @@ class MainActivity : ComponentActivity() {
         }
         layout.addView(requestButton)
         layout.addView(Button(this).apply {
-            setText(R.string.add_row_frame)
+            setText(R.string.add_row)
             setOnClickListener {
                 val id = ++sequence
                 scope.launch {
                     database.items().insert(DemoItem(id, "Demo item #$id", "demo-secret"))
-                    val now = System.currentTimeMillis()
-                    mothlight.realtime.connection("demo", ConnectionState.CONNECTED, now)
-                    mothlight.realtime.record("demo", FrameDirection.INCOMING, """{"item":$id,"token":"demo-secret"}""", now)
+                    demoLog(LogLevel.INFO, "Room", "Inserted demo item #$id")
                 }
             }
         })
-        layout.addView(Button(this).apply {
-            setText(R.string.diagnostic_scenario)
-            setOnClickListener { diagnosticScenario(mothlight) }
-        })
-        val retentionActions = LinearLayout(this)
-        retentionActions.addView(Button(this).apply {
-            setText(R.string.retain_object)
-            setOnClickListener {
-                val target = ByteArray(1024)
-                heldObject = target
-                retentionWatcher.expectReleased(target, getString(R.string.demo_object), getString(R.string.demo_reason))
-                panelState.selectTool("retention")
-            }
-        }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        retentionActions.addView(Button(this).apply {
-            setText(R.string.release_object)
-            setOnClickListener {
-                if (heldObject != null) {
-                    mothlight.events.record(DiagnosticEvent("release-${++sequence}", System.currentTimeMillis(), "retention", getString(R.string.release_object)))
-                }
-                heldObject = null
-            }
-        }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        layout.addView(retentionActions)
-        layout.addView(createMemoryOverlayView(this, mothlight, retention = RetentionOverlay.Visible(retentionWatcher, RetentionAction.OpenTool { panelState.selectTool("retention") })))
+        layout.addView(createMemoryOverlayView(this, mothlight))
         layout.addView(createMothlightView(this, mothlight, tools, panelState), LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
+        ViewCompat.setOnApplyWindowInsetsListener(layout) { view, windowInsets ->
+            val insets = windowInsets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout() or WindowInsetsCompat.Type.ime(),
+            )
+            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+            windowInsets
+        }
+        layout.doOnPreDraw {
+            mothlight.startup.mark("first_layout", SystemClock.elapsedRealtime())
+            demoLog(LogLevel.INFO, "Startup", "Inspector layout is ready")
+        }
         setContentView(layout)
     }
     private fun request() {
@@ -102,17 +93,22 @@ class MainActivity : ComponentActivity() {
         pending = api.items().also { call ->
             call.enqueue(object : Callback<ResponseBody> {
                 override fun onResponse(call: Call<ResponseBody>, response: retrofit2.Response<ResponseBody>) {
+                    demoLog(LogLevel.INFO, "Retrofit", "Demo response: HTTP ${response.code()}")
                     response.body()?.close()
                     response.errorBody()?.close()
                 }
-                override fun onFailure(call: Call<ResponseBody>, error: Throwable) = Unit
+                override fun onFailure(call: Call<ResponseBody>, error: Throwable) {
+                    if (!call.isCanceled) demoLog(LogLevel.WARN, "Retrofit", "Demo request failed")
+                }
             })
         }
     }
+    private fun demoLog(level: LogLevel, tag: String, message: String) {
+        mothlight.logs.record(LogEntry(logSequence.incrementAndGet().toString(), SystemClock.elapsedRealtime(), level, tag, message))
+    }
+
     override fun onDestroy() {
         pending?.cancel()
-        retentionWatcher.close()
-        heldObject = null
         scope.cancel()
         database.close()
         client.dispatcher.cancelAll()

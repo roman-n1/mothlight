@@ -16,6 +16,7 @@ class RoomDatabaseSource(private val database: RoomDatabase, redactor: Redactor 
     }, { changes() }, redactor)
     override suspend fun tables() = reader.tables()
     override suspend fun page(table: String, limit: Int, offset: Int) = reader.page(table, limit, offset)
+    override suspend fun schema(table: String) = reader.schema(table)
     override fun changes(): Flow<Unit> = flow {
         val names = tables()
         if (names.isEmpty()) { emit(Unit); return@flow }

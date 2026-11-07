@@ -9,7 +9,7 @@ class LiveToolMappersTest {
         assertFalse(hasNextPage(page))
         assertTrue(hasPreviousPage(page))
         assertEquals(0, previousOffset(page))
-        assertEquals(listOf("id: 51\nname: empty"), databaseRows(page, "empty"))
+        assertEquals("empty", cellText(DatabaseCell.SqlNull, "empty"))
         assertTrue(hasNextPage(page.copy(totalRows = 101)))
         assertEquals(100, nextOffset(page))
     }
@@ -17,7 +17,11 @@ class LiveToolMappersTest {
         val state = SqlTraceSnapshot(queries = listOf(SqlQueryStat("SELECT cheap", 5, 0, 10, 2), SqlQueryStat("SELECT slow", 1, 0, 50, 50)))
         assertEquals(listOf("SELECT slow", "SELECT cheap"), sqlStats(state, "select").map { it.sql })
         assertEquals(1, sqlStats(state, "SLOW").size)
-        val frames = listOf(RealtimeFrame(1, "chat", FrameDirection.INCOMING, CapturedBody.NotCaptured, 1), RealtimeFrame(2, "presence", FrameDirection.INCOMING, CapturedBody.NotCaptured, 2), RealtimeFrame(3, "chat", FrameDirection.OUTGOING, CapturedBody.NotCaptured, 3))
-        assertEquals(listOf(3L, 1L), realtimeFrames(frames, "CHAT").map { it.id })
+    }
+
+    @Test fun sqlFormattingKeepsQuotedTextAndCommentsTogether() {
+        val sql = "SELECT 'a  WHERE b', [FROM x] FROM items /* ORDER BY x */ WHERE id = ? -- LIMIT 4"
+        assertEquals("SELECT 'a  WHERE b', [FROM x]\nFROM items /* ORDER BY x */\nWHERE id = ? -- LIMIT 4",
+            formatRecordedSql(sql))
     }
 }
