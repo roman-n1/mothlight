@@ -1,4 +1,8 @@
+import com.vanniktech.maven.publish.MavenPublishBaseExtension
+import org.gradle.api.publish.PublishingExtension
+
 plugins {
+    id("com.vanniktech.maven.publish") version "0.37.0" apply false
     id("com.google.devtools.ksp") version "2.3.13" apply false
     kotlin("jvm") version "2.4.21" apply false
     kotlin("plugin.compose") version "2.4.21" apply false
@@ -11,5 +15,49 @@ plugins {
 }
 allprojects {
     group = "io.github.roman-n1.mothlight"
-    version = "0.1.0-SNAPSHOT"
+    version = providers.gradleProperty("mothlightVersion").get()
+}
+
+subprojects {
+    val central = providers.gradleProperty("mothlightPublishToCentral").map(String::toBoolean).getOrElse(false)
+    val localRepository = providers.gradleProperty("mothlightPublicationRepository")
+    pluginManager.withPlugin("maven-publish") {
+        pluginManager.apply("com.vanniktech.maven.publish")
+        extensions.configure<MavenPublishBaseExtension> {
+            if (central) {
+                publishToMavenCentral()
+                signAllPublications()
+            }
+            pom {
+                name.set(project.name)
+                description.set("Multiplatform debugging tools for Kotlin applications")
+                url.set("https://github.com/roman-n1/mothlight")
+                licenses {
+                    license {
+                        name.set("Apache License, Version 2.0")
+                        url.set("https://www.apache.org/licenses/LICENSE-2.0")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("roman-n1")
+                        url.set("https://github.com/roman-n1")
+                    }
+                }
+                scm {
+                    url.set("https://github.com/roman-n1/mothlight")
+                    connection.set("scm:git:https://github.com/roman-n1/mothlight.git")
+                    developerConnection.set("scm:git:ssh://git@github.com/roman-n1/mothlight.git")
+                }
+            }
+        }
+        if (localRepository.isPresent) {
+            extensions.configure<PublishingExtension> {
+                repositories.maven {
+                    name = "ReleaseCheck"
+                    url = uri(localRepository.get())
+                }
+            }
+        }
+    }
 }

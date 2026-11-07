@@ -1,0 +1,35 @@
+name: Published consumer
+on:
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: published-consumer-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  consumer:
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v5
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+      - run: sdkmanager 'platforms;android-37.0' 'build-tools;36.0.0'
+      - name: Publish to an isolated Maven repository
+        run: ./gradlew publishAllPublicationsToReleaseCheckRepository -PmothlightPublicationRepository="$RUNNER_TEMP/maven" --no-configuration-cache
+      - name: Run a separate JVM consumer using the published artifacts
+        run: |
+          version=$(sed -n 's/^mothlightVersion=//p' gradle.properties)
+          ./gradlew -p verification/published-consumer run \
+            -PmothlightPublicationRepository="$RUNNER_TEMP/maven" \
+            -PmothlightVersion="$version" --no-configuration-cache

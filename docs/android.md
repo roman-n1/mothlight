@@ -13,8 +13,8 @@ interface with a no-op implementation in `src/release`.
 ```kotlin
 // app/build.gradle.kts
 // The library is not yet on Maven Central; these coordinates use composite substitution.
-debugImplementation("io.github.roman-n1.mothlight:mothlight-okhttp:0.1.0-SNAPSHOT")
-debugImplementation("io.github.roman-n1.mothlight:mothlight-android:0.1.0-SNAPSHOT")
+debugImplementation("io.github.roman-n1.mothlight:mothlight-okhttp:1.0.0-beta.1")
+debugImplementation("io.github.roman-n1.mothlight:mothlight-android:1.0.0-beta.1")
 ```
 
 ```kotlin

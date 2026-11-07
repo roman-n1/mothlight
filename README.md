@@ -114,6 +114,8 @@ Platform targets: Android, JVM, iOS arm64/simulator arm64, JS and Wasm. See
 [verification](docs/verification.md) for what was actually tested; declaring a target
 is not a claim of device validation.
 
+Release maintainers can publish from GitHub Actions. See [Maven Central releases](docs/publishing.md).
+
 ## Use from source
 
 Until the first Maven Central release, use a Gradle composite build. In your app's
@@ -126,8 +128,8 @@ includeBuild("../mothlight")
 Then add only the modules you need:
 
 ```kotlin
-implementation("io.github.roman-n1.mothlight:mothlight-compose:0.1.0-SNAPSHOT")
-implementation("io.github.roman-n1.mothlight:mothlight-ktor:0.1.0-SNAPSHOT")
+implementation("io.github.roman-n1.mothlight:mothlight-compose:1.0.0-beta.1")
+implementation("io.github.roman-n1.mothlight:mothlight-ktor:1.0.0-beta.1")
 ```
 
 Create and own one instance in your application graph. Recording starts disabled:
