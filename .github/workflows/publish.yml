@@ -33,9 +33,10 @@ jobs:
   consumer:
     needs: version
     uses: ./.github/workflows/published-consumer.yml
+    with:
+      core-release-only: true
   prepare:
-    name: Prepare unsigned Maven repository
-    if: github.event_name == 'workflow_dispatch' || vars.MAVEN_CENTRAL_PUBLISH_ENABLED != 'true'
+    name: Prepare Maven repository and check Central quota
     needs: [verify, consumer]
     timeout-minutes: 45
     runs-on: macos-26
@@ -50,8 +51,28 @@ jobs:
         with:
           packages: platform-tools
       - run: sdkmanager 'platforms;android-37.0' 'build-tools;36.0.0'
-      - run: ./gradlew publishAllPublicationsToReleaseCheckRepository -PmothlightPublicationRepository="$RUNNER_TEMP/maven" --no-configuration-cache --max-workers=2
+      - run: ./gradlew publishAllPublicationsToReleaseCheckRepository -PmothlightReleaseCoreOnly=true -PmothlightPublicationRepository="$RUNNER_TEMP/maven" --no-configuration-cache --max-workers=2
+      - name: Estimate Central usage and check remaining quota
+        shell: bash
+        env:
+          CENTRAL_PUBLISH_ENABLED: ${{ vars.MAVEN_CENTRAL_PUBLISH_ENABLED }}
+          CENTRAL_REMAINING_FILES: ${{ vars.MAVEN_CENTRAL_REMAINING_FILES }}
+          CENTRAL_REMAINING_BYTES: ${{ vars.MAVEN_CENTRAL_REMAINING_BYTES }}
+        run: |
+          version=$(sed -n 's/^mothlightVersion=//p' gradle.properties)
+          options=()
+          if [[ -n "$CENTRAL_REMAINING_FILES" ]]; then
+            options+=("--max-files=$CENTRAL_REMAINING_FILES")
+          fi
+          if [[ -n "$CENTRAL_REMAINING_BYTES" ]]; then
+            options+=("--max-bytes=$CENTRAL_REMAINING_BYTES")
+          fi
+          if [[ "$GITHUB_EVENT_NAME" == release && "$CENTRAL_PUBLISH_ENABLED" == true ]]; then
+            options+=(--require-budget)
+          fi
+          python3 scripts/check_central_budget.py "$RUNNER_TEMP/maven" "$version" "${options[@]}" | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
         with:
           name: unsigned-maven-repository
           path: ${{ runner.temp }}/maven
@@ -59,7 +80,7 @@ jobs:
   publish:
     name: Release to Maven Central
     if: github.event_name == 'release' && vars.MAVEN_CENTRAL_PUBLISH_ENABLED == 'true'
-    needs: [verify, consumer]
+    needs: prepare
     timeout-minutes: 60
     runs-on: macos-26
     steps:
@@ -73,7 +94,7 @@ jobs:
         with:
           packages: platform-tools
       - run: sdkmanager 'platforms;android-37.0' 'build-tools;36.0.0'
-      - name: Sign and publish all libraries
+      - name: Sign and publish the release libraries
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
@@ -94,4 +115,4 @@ jobs:
           if [[ -z "$ORG_GRADLE_PROJECT_signingInMemoryKeyPassword" ]]; then
             unset ORG_GRADLE_PROJECT_signingInMemoryKeyPassword
           fi
-          ./gradlew publishAndReleaseToMavenCentral -PmothlightPublishToCentral=true --no-configuration-cache --max-workers=2
+          ./gradlew publishAndReleaseToMavenCentral -PmothlightReleaseCoreOnly=true -PmothlightPublishToCentral=true --no-configuration-cache --max-workers=2

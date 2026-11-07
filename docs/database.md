@@ -7,6 +7,9 @@ Add `mothlight-room` for `androidx.room` 2.8.5, or `mothlight-room3` for
 required for HTTP, logs or a custom database source. Room dependencies
 remain outside `mothlight-core` and `mothlight-compose`.
 
+The Beta 1 Maven Central release includes the Room 2 adapter.
+Use the `mothlight-room3` project from source for Room 3.
+
 Use a database built with `setDriver`, then attach that same app-owned instance:
 
 ```kotlin

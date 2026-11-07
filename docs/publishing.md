@@ -1,8 +1,29 @@
 # Maven Central releases
 
 GitHub Actions builds and signs the libraries. To check packaging from a browser,
-open **Actions → Publish → Run workflow**. The run executes Verify and the published consumer check, then uploads
-an unsigned Maven repository. It works without Central credentials.
+open **Actions → Publish → Run workflow**. The run executes Verify and the published
+consumer check, then prepares an unsigned Maven repository and reports the estimated
+Central file count, size before ZIP compression, and largest files in the Actions
+summary. It works without Central credentials.
+
+The release uses `-PmothlightReleaseCoreOnly=true` for preparation, the consumer
+check and upload. This publishes eight library modules with all their platforms.
+The optional `mothlight-room3` adapter stays available from source and is included
+in regular pull request checks.
+
+Before enabling publication or retrying a release, check the remaining monthly
+allowance in [Central Portal Usage Center](https://central.sonatype.com/publishing/usage?org=roman-n1).
+Use the organization totals if the namespace shares its quota with other projects
+such as Actron. Confirm there is also room for a release, then set the repository
+Actions variables `MAVEN_CENTRAL_REMAINING_FILES` and
+`MAVEN_CENTRAL_REMAINING_BYTES` to the **remaining** file and size allowance as
+whole numbers. Refresh both values before every release and after any other
+publication that shares this quota. The workflow cannot read live usage.
+
+The release upload requires both budgets and stops if either estimate exceeds
+the configured allowance. The estimate includes one signature and two checksums
+per payload, with a size reserve for each signature. Manual runs report usage
+even when neither budget is configured.
 
 ## One-time setup
 

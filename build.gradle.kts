@@ -1,3 +1,4 @@
+import com.vanniktech.maven.publish.Checksum
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.gradle.api.publish.PublishingExtension
 
@@ -21,10 +22,15 @@ allprojects {
 subprojects {
     val central = providers.gradleProperty("mothlightPublishToCentral").map(String::toBoolean).getOrElse(false)
     val localRepository = providers.gradleProperty("mothlightPublicationRepository")
+    val coreRelease = providers.gradleProperty("mothlightReleaseCoreOnly").orNull == "true"
+    val includedInRelease = !coreRelease || path != ":mothlight-room3"
     pluginManager.withPlugin("maven-publish") {
         pluginManager.apply("com.vanniktech.maven.publish")
         extensions.configure<MavenPublishBaseExtension> {
-            if (central) {
+            if (central && includedInRelease) {
+                // Keep the deployment sidecars in sync with scripts/check_central_budget.py.
+                checksums(Checksum.MD5, Checksum.SHA1)
+                excludeSignatureChecksums()
                 publishToMavenCentral()
                 signAllPublications()
             }
@@ -51,7 +57,7 @@ subprojects {
                 }
             }
         }
-        if (localRepository.isPresent) {
+        if (localRepository.isPresent && includedInRelease) {
             extensions.configure<PublishingExtension> {
                 repositories.maven {
                     name = "ReleaseCheck"

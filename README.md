@@ -281,7 +281,7 @@ redacted data; it is not an authenticated replay facility.
 | `mothlight-okhttp` | OkHttp interceptor, also works with Retrofit | No |
 | `mothlight-sqlite` | SQLiteDriver tracing and read-only table source | No |
 | `mothlight-room` | Room 2 live database adapter (Android/JVM/iOS) | No |
-| `mothlight-room3` | Room 3 live database adapter (Android/JVM/iOS) | No |
+| `mothlight-room3` | Room 3 live database adapter (Android/JVM/iOS, available from source for Beta 1) | No |
 | `mothlight-android` | View factory for Activities and Fragments | No Compose source/compiler required |
 | `sample-desktop` | Reading app with live DEV HTTPS, persistent Room subscriptions/bookmarks and a resizable debug dock | Demo |
 | `sample-android` | Native Android Views + Retrofit demo, synthetic responses | No |

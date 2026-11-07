@@ -2,6 +2,10 @@ name: Published consumer
 on:
   pull_request:
   workflow_call:
+    inputs:
+      core-release-only:
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -14,6 +18,8 @@ jobs:
   consumer:
     runs-on: macos-26
     timeout-minutes: 45
+    env:
+      ORG_GRADLE_PROJECT_mothlightReleaseCoreOnly: ${{ inputs.core-release-only || 'false' }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-java@v5
